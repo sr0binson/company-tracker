@@ -3,7 +3,7 @@ name: Fetch Releases Daily
 on:
   schedule:
     - cron: "0 9 * * *"  # runs every day at 9am UTC
-  workflow_dispatch:       # lets you run it manually too from GitHub
+  workflow_dispatch:
 
 jobs:
   fetch:
@@ -19,10 +19,13 @@ jobs:
       - name: Run fetch script
         run: python3 fetch_feeds.py
 
-      - name: Commit and push new data
+      - name: Generate HTML
+        run: python3 generate_html.py
+
+      - name: Commit and push HTML
         run: |
           git config user.name "github-actions"
           git config user.email "actions@github.com"
-          git add releases.db
-          git commit -m "daily release fetch" || echo "nothing new to commit"
+          git add index.html
+          git commit -m "update releases page" || echo "nothing new to commit"
           git push
