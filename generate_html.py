@@ -11,6 +11,20 @@ releases = cursor.execute("""
 
 conn.close()
 
+company_colors = {
+    "PostHog": "#E8E0D0",
+    "Zapier": "#FF7A3D",
+    "Replit": "#AAAAAA",
+    "Linear": "#8B94E0",
+}
+
+company_text_colors = {
+    "PostHog": "#111111",
+    "Zapier": "#111111",
+    "Replit": "#111111",
+    "Linear": "#111111",
+}
+
 html = """<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -37,7 +51,7 @@ for company, title, updated, link in releases:
     date = updated[:10]
     html += f"""
     <div class="release">
-        <div class="company">{company}</div>
+        <div class="company" style="background:{company_colors.get(company, '#eee')}; color:{company_text_colors.get(company, '#111')}; display:inline-block; padding:2px 8px; border-radius:20px;">{company}</div>
         <div class="title"><a href="{link}" target="_blank">{title}</a></div>
         <div class="date">{date}</div>
     </div>
