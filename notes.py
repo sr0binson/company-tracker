@@ -20,7 +20,7 @@
 # This is our list of companies we want to track.
 # Each company has a name and a URL pointing to their GitHub releases page.
 # Think of it like a list of RSS subscriptions in an old school feed reader.
-# RSS=Really Simple Syndication. RSS is like if every restaurant agreed to fax you their specials every morning. You just wait by the fax machine
+# RSS=Really Simple Syndication. RSS is like if every restaurant agreed to fax you their specials every morning. You just wait by the fax machine.
 # Adding a new company later is as easy as adding a new line here.
 
 # --- NAMESPACE ---
