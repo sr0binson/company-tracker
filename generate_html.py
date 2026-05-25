@@ -33,7 +33,11 @@ html = """<!DOCTYPE html>
     <p class="subtitle">Latest releases from companies I want to work for.</p>
 """
 
-for company, title, updated, link in releases:
+for row in releases:
+    title = row[0]
+    updated = row[1]
+    link = row[2]
+    company = row[3]
     date = updated[:10]
     html += f"""
     <div class="release">
