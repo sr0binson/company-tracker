@@ -44,7 +44,7 @@ html = """<!DOCTYPE html>
 </head>
 <body>
     <h1>Company Tracker</h1>
-    <p class="subtitle">Latest releases from companies I want to work for.</p>
+    <p class="subtitle">Cool Companies, Fresh Releases.</p>
 """
 
 for company, title, updated, link in releases:
