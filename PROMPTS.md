@@ -32,3 +32,11 @@ Update `generate_html.py` and `index.html` with the following:
 - Zapier: Al the pixel art mascot (glasses, mustache, tie) as custom cursor, animates on click
 - Replit: Replit logo as custom cursor, falls apart and reassembles on click
 - Linear: Linear logo as custom cursor, glows softly like a moon on hover and fully illuminates on click
+
+### Future Ideas
+
+**Analogy Voice Selector:**
+- Allow users to choose the "voice" for the corny analogy on each release
+- Options: Simple (default), Middle English, Gen Z, 90s Slang
+- Each voice rewrites the same analogy in that style via the Anthropic API
+- Could be a small toggle or dropdown on each release card
