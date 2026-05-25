@@ -31,8 +31,9 @@ html = """<!DOCTYPE html>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Company Tracker</title>
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: sans-serif; max-width: 800px; margin: 40px auto; padding: 0 20px; background: #f9f9f9; }
+        body { font-family: 'Sora', sans-serif; max-width: 800px; margin: 40px auto; padding: 0 20px; background: #f9f9f9; }
         h1 { font-size: 1.8rem; margin-bottom: 4px; }
         p.subtitle { color: #666; margin-top: 0; }
         .release { background: white; border-radius: 8px; padding: 16px 20px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
@@ -43,8 +44,11 @@ html = """<!DOCTYPE html>
     </style>
 </head>
 <body>
-    <h1>Company Tracker</h1>
-    <p class="subtitle">Cool Companies, Fresh Releases.</p>
+    <h1 style="font-size: 1rem; font-weight: 300; text-align: left;">Company Tracker</h1>
+    <h2 style="font-size: 3rem; font-weight: 700; margin-top: 4rem; line-height: 1.2;">
+  <span style="display: block; text-align: left; padding-left: 15%;">Cool Companies,</span>
+  <span style="display: block; text-align: center;">Fresh Releases.</span>
+</h2>
 """
 
 for company, title, updated, link in releases:
