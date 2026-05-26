@@ -32,3 +32,5 @@ jobs:
           git add index.html
           git commit -m "update releases page" || echo "nothing new to commit"
           git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
