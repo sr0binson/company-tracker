@@ -16,6 +16,9 @@ jobs:
         with:
           python-version: "3.11"
 
+      - name: Install dependencies
+        run: pip install python-dotenv anthropic
+
       - name: Run fetch script
         run: python3 fetch_feeds.py
 
