@@ -265,14 +265,20 @@ html = """<!DOCTYPE html>
 
     <!-- Cursor elements -->
     <img id="hh-cursor" src="hedgehog.png" />
-    <img id="linear-cursor" src="linear_cursor.png" />
+    <svg id="linear-cursor" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 26 26">
+        <circle cx="13" cy="13" r="11" fill="#8B94E0"/>
+    </svg>
     <div id="zap-cursor">
         <svg width="22" height="32" viewBox="0 0 22 32" fill="none" xmlns="http://www.w3.org/2000/svg">
             <polygon points="14,0 4,18 11,18 8,32 20,12 13,12 20,0" fill="#FF7A3D" stroke="white" stroke-width="1" stroke-linejoin="round"/>
         </svg>
     </div>
     <!-- Replit cursor -->
-    <img id="replit-cursor" src="replit.png" style="position:fixed;pointer-events:none;z-index:99999;display:none;transform:translate(-50%,-50%);width:36px;height:auto;" />
+    <svg id="replit-cursor" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 36 24" style="position:fixed;pointer-events:none;z-index:99999;display:none;transform:translate(-50%,-50%);width:30px;height:auto;">
+        <rect id="replit-block-1" x="7" y="1" width="22" height="6" rx="1" fill="#AAAAAA"/>
+        <rect id="replit-block-2" x="7" y="9" width="22" height="6" rx="1" fill="#AAAAAA"/>
+        <rect id="replit-block-3" x="7" y="17" width="22" height="6" rx="1" fill="#AAAAAA"/>
+    </svg>
 
     <div class="sticky-header">
         <img src="SteezyR.png" class="header-logo" alt="">
@@ -565,18 +571,27 @@ html += """
             el.addEventListener('mouseleave', function() { replitCursor.style.display = 'none'; });
         });
 
-        // Replit click - image bounces/explodes
+        // Replit click - blocks scatter then snap back
         document.querySelectorAll('.section-replit').forEach(function(el) {
             el.addEventListener('click', function(e) {
-                replitCursor.style.transition = 'none';
-                replitCursor.style.transform = 'translate(-50%, -50%) scale(1)';
-                void replitCursor.offsetWidth;
-                replitCursor.style.transition = 'transform 0.25s ease-out';
-                replitCursor.style.transform = 'translate(-50%, -50%) scale(1.6)';
+                var blocks = [
+                    document.getElementById('replit-block-1'),
+                    document.getElementById('replit-block-2'),
+                    document.getElementById('replit-block-3')
+                ];
+                blocks.forEach(function(b) {
+                    var dx = (Math.random() - 0.5) * 36;
+                    var dy = (Math.random() - 0.5) * 36;
+                    var rot = (Math.random() - 0.5) * 60;
+                    b.style.transition = 'transform 0.18s ease-out';
+                    b.style.transform = 'translate(' + dx + 'px,' + dy + 'px) rotate(' + rot + 'deg)';
+                });
                 setTimeout(function() {
-                    replitCursor.style.transition = 'transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)';
-                    replitCursor.style.transform = 'translate(-50%, -50%) scale(1)';
-                }, 250);
+                    blocks.forEach(function(b) {
+                        b.style.transition = 'transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)';
+                        b.style.transform = 'translate(0,0) rotate(0deg)';
+                    });
+                }, 200);
             });
         });
 

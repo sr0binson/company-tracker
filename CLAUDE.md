@@ -45,3 +45,7 @@ Company list and brand colors are hardcoded at the top of each script. To add a 
 ## Design spec
 
 `PROMPTS.md` contains the full design specification and future ideas (e.g. analogy voice selector). Refer to it when making UI changes.
+
+## Prompt logging
+
+Every time the user sends a prompt, append an entry to `prompts.md` with a timestamp and a one-line summary of what was changed.

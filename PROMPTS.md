@@ -119,6 +119,14 @@ Removed the "Releases" card-label div and "click to view" card-hint div from the
 
 Copied `SteezyR.png` from `~/Downloads/` into the project root. Added `<img src="SteezyR.png" class="header-logo">` inside `.sticky-header` in `generate_html.py`. CSS: `.header-logo { position: absolute; top: 12px; right: 20px; height: 70px; width: auto; pointer-events: none; }` — absolute-positioned top-right inside the fixed header so it floats without affecting heading or voice button layout. Committed `SteezyR.png` to git so it deploys to GitHub Pages.
 
+### 2026-05-29 — Replace Linear and Replit cursor images with inline SVGs
+
+Swapped `<img id="linear-cursor" src="linear_cursor.png">` for an inline SVG circle (fill `#8B94E0`) and `<img id="replit-cursor" src="replit.png">` for an inline SVG of three stacked rectangles (fill `#AAAAAA`). All CSS animations and JS event handlers unchanged — they reference the same element ids, which work identically on SVG nodes. Added prompt-logging rule to CLAUDE.md.
+
+### 2026-05-29 — Smaller Replit cursor blocks with scatter-and-snap click animation
+
+Shrunk the three Replit SVG rects (width 30→22, height 8→6, viewBox adjusted to 36×24, overall SVG width 36→30px). Replaced the old bounce/scale click handler with one that animates each block individually: on click each rect flies to a random translate+rotate offset, then snaps back via a spring cubic-bezier. All other CSS and JS untouched.
+
 ### Future Ideas
 
 **Analogy Voice Selector:**
