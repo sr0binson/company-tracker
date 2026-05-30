@@ -72,6 +72,25 @@ COMPETITORS = {
     "Zapier":  ["Make", "n8n", "Workato", "Power Automate"],
     "Replit":  ["GitHub Codespaces", "Glitch", "CodeSandbox", "Cursor"],
 }
+COMPETITOR_URLS = {
+    "Mixpanel":         "https://mixpanel.com",
+    "Amplitude":        "https://amplitude.com",
+    "Heap":             "https://heap.io",
+    "FullStory":        "https://www.fullstory.com",
+    "LaunchDarkly":     "https://launchdarkly.com",
+    "Jira":             "https://www.atlassian.com/software/jira",
+    "Asana":            "https://asana.com",
+    "GitHub Issues":    "https://github.com/features/issues",
+    "Shortcut":         "https://shortcut.com",
+    "Make":             "https://www.make.com",
+    "n8n":              "https://n8n.io",
+    "Workato":          "https://www.workato.com",
+    "Power Automate":   "https://powerautomate.microsoft.com",
+    "GitHub Codespaces":"https://github.com/features/codespaces",
+    "Glitch":           "https://glitch.com",
+    "CodeSandbox":      "https://codesandbox.io",
+    "Cursor":           "https://cursor.com",
+}
 
 # ── data preparation ──────────────────────────────────────────────────────────
 
@@ -208,10 +227,11 @@ def sparkline_svg(monthly, color, width=270, bar_h=28, label_h=13):
     for i, (label, count) in enumerate(monthly):
         xc = (i + 0.5) * col_w
         bh = (count / max_c) * bar_h
-        if bh > 0:
-            parts.append(f'<rect x="{xc - bw/2:.1f}" y="{bar_h - bh:.1f}" '
-                         f'width="{bw:.1f}" height="{bh:.1f}" rx="2" '
-                         f'fill="{color}" opacity="0.72"/>')
+        draw_h = max(bh, 1)
+        bar_opacity = "0.72" if count > 0 else "0.15"
+        parts.append(f'<rect x="{xc - bw/2:.1f}" y="{bar_h - draw_h:.1f}" '
+                     f'width="{bw:.1f}" height="{draw_h:.1f}" rx="2" '
+                     f'fill="{color}" opacity="{bar_opacity}"/>')
         parts.append(f'<text x="{xc:.1f}" y="{bar_h + 10}" text-anchor="middle" '
                      f'font-family="Sora,sans-serif" font-size="8" fill="#bbb">{label}</text>')
     parts.append('</svg>')
@@ -245,7 +265,7 @@ html = """<!DOCTYPE html>
         /* Left paper-stack card */
         .company-card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); cursor: pointer; transition: box-shadow 0.2s ease; overflow: hidden; display: flex; flex-direction: column; }
         .company-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.12); }
-        .company-tag { display: inline-block; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; padding: 3px 10px; border-radius: 20px; margin-bottom: 8px; border: 1.5px solid #111; background: white !important; color: #111 !important; }
+        .company-tag { display: inline-block; align-self: flex-start; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; padding: 3px 10px; border-radius: 20px; margin-bottom: 8px; border: 1.5px solid #111; background: white !important; color: #111 !important; }
         .card-label { font-size: 0.8rem; color: #888; margin-bottom: 10px; }
 
         /* Cursor zones */
@@ -312,7 +332,7 @@ html = """<!DOCTYPE html>
         .back-header { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: #999; margin-bottom: 5px; }
         .pill-row { display: flex; flex-wrap: wrap; gap: 5px; }
         .serve-pill { font-size: 0.7rem; padding: 3px 9px; border-radius: 20px; background: #f4f4f4; color: #555; font-weight: 500; }
-        .comp-pill  { font-size: 0.7rem; padding: 3px 9px; border-radius: 20px; background: white; font-weight: 500; border: 1.5px solid; }
+        .comp-pill  { font-size: 0.7rem; padding: 3px 9px; border-radius: 20px; background: white; font-weight: 500; border: 1.5px solid; cursor: pointer; text-decoration: none; }
 
         /* Voice pills */
         .voice-global { display: flex; gap: 8px; flex-wrap: wrap; }
@@ -455,7 +475,7 @@ for company in ["PostHog", "Linear", "Zapier", "Replit"]:
         for s in WHO_THEY_SERVE.get(company, [])
     )
     comp_pills = ''.join(
-        f'<span class="comp-pill" style="border-color:{color};color:{accent};">{html_escape(c)}</span>'
+        f'<a class="comp-pill" href="{COMPETITOR_URLS.get(c, "#")}" target="_blank" rel="noopener" style="border-color:{color};color:{accent};">{html_escape(c)}</a>'
         for c in COMPETITORS.get(company, [])
     )
 
