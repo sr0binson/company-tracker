@@ -239,10 +239,11 @@ def _str_field(val):
     return str(val).strip()
 
 def fetch_jobs():
+    cursor.execute("DELETE FROM jobs")
+    conn.commit()
+    print("Jobs table cleared.")
     today = date_cls.today().isoformat()
     for company, slug in ASHBY_SLUGS.items():
-        cursor.execute("DELETE FROM jobs WHERE company = ?", (company,))
-        conn.commit()
         print(f"Fetching jobs for {company}...")
         url = f"https://api.ashbyhq.com/posting-api/job-board/{slug}"
         try:
@@ -390,5 +391,10 @@ for company, url in FEEDS.items():
 
 conn.commit()
 fetch_jobs()
+print("\nVerification — first 3 PostHog job URLs:")
+for row in cursor.execute(
+    "SELECT title, url FROM jobs WHERE company='PostHog' ORDER BY title LIMIT 3"
+).fetchall():
+    print(f"  {row[0]} | {row[1]}")
 conn.close()
 print("Done!")
