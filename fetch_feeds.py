@@ -266,10 +266,14 @@ def fetch_jobs():
                     _str_field(job.get("location")) or
                     _str_field(job.get("primaryLocation"))
                 )
-                job_url = (
-                    job.get("jobUrl") or job.get("hostedUrl") or
-                    job.get("applyUrl") or job.get("url") or ""
-                )
+                if company == "PostHog":
+                    job_id = job.get("id", "")
+                    job_url = f"https://posthog.com/careers#{job_id}" if job_id else ""
+                else:
+                    job_url = (
+                        job.get("jobUrl") or job.get("hostedUrl") or
+                        job.get("applyUrl") or job.get("url") or ""
+                    )
                 cursor.execute("""
                     INSERT OR IGNORE INTO jobs (company, title, department, location, url, date_found)
                     VALUES (?, ?, ?, ?, ?, ?)
