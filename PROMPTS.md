@@ -127,6 +127,55 @@ Swapped `<img id="linear-cursor" src="linear_cursor.png">` for an inline SVG cir
 
 Shrunk the three Replit SVG rects (width 30→22, height 8→6, viewBox adjusted to 36×24, overall SVG width 36→30px). Replaced the old bounce/scale click handler with one that animates each block individually: on click each rect flies to a random translate+rotate offset, then snaps back via a spring cubic-bezier. All other CSS and JS untouched.
 
+### 2026-05-29 — Fix empty-content AI complaints and rename "Blog & Changelog" to "Updates"
+
+Added content-length guard to `get_ai_summary`: if content is empty or under 20 chars, skip the API call and return `(title, "")` immediately. Updated prompt to say "If you have very little information, write one short sentence based on the title alone." Changed call sites to pass raw `content` instead of `content or title`. Added backfill step that detects existing complaint-style summaries (LIKE patterns: "I don't have", "I cannot", etc.) and resets them to `summary = title, analogy = ""`. "Blog & Changelog" label was already "Updates" everywhere — no change needed.
+
+### 2026-05-29 — Query PostHog blog post links from DB
+
+Ran `sqlite3 releases.db "SELECT link FROM blog_posts WHERE company='PostHog' LIMIT 5;"` — returned 5 live PostHog blog URLs.
+
+### 2026-05-29 — Major layout and feature overhaul: 4-row grid, flip cards, jobs, keyword bubbles, sparklines
+
+Rewrote `generate_html.py` and extended `fetch_feeds.py` with:
+- Layout changed from 2×2 grid to 4 rows × 2 columns (one row per company)
+- Left column: existing paper stack blog/changelog cards (unchanged)
+- Right column: new CSS 3D flip card (400ms horizontal flip, ↺ icon)
+- Flip front: open roles count (clickable → popover of departments/jobs), keyword bubble SVG (frequency-weighted, packed, company color), sparkline bar chart (last 6 months post activity)
+- Flip back: "Who they serve" pill tags, "Competes with" competitor outline pills
+- Added `jobs` table to `releases.db`; `fetch_jobs()` hits Ashby public API for PostHog/Linear/Zapier/Replit, skips refetch if data is under 7 days old
+- Jobs fetched: PostHog 16, Linear 26, Zapier 22, Replit 89
+- Keyword extraction runs at generation time from all blog_posts titles + summaries; stop-word filtered
+- Monthly post counts computed from DB grouped by calendar month
+
+### 2026-05-29 — Run python3 generate_html.py
+
+Ran `python3 generate_html.py` — no errors, index.html regenerated successfully.
+
+### 2026-05-29 — Log session prompts to prompts.md; read CLAUDE.md before every prompt
+
+Added all prompts from this session to `prompts.md`. Established rule: read `CLAUDE.md` before responding to every prompt going forward in this session.
+
+### 2026-05-29 — Run python3 generate_html.py (2)
+
+Ran `python3 generate_html.py` — no errors, index.html regenerated successfully.
+
+### 2026-05-29 — cat claude.md
+
+Printed CLAUDE.md contents to terminal.
+
+### 2026-05-29 — cat prompts.md
+
+Printed prompts.md contents to terminal.
+
+### 2026-05-29 — Tested prompt logging
+
+Tested prompt logging.
+
+### 2026-05-29 — ls
+
+Listed files in project root.
+
 ### Future Ideas
 
 **Analogy Voice Selector:**
