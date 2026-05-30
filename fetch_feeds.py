@@ -241,18 +241,8 @@ def _str_field(val):
 def fetch_jobs():
     today = date_cls.today().isoformat()
     for company, slug in ASHBY_SLUGS.items():
-        latest = cursor.execute(
-            "SELECT date_found FROM jobs WHERE company = ? ORDER BY date_found DESC LIMIT 1",
-            (company,)
-        ).fetchone()
-        if latest:
-            try:
-                age = (date_cls.today() - date_cls.fromisoformat(latest[0][:10])).days
-                if age < 7:
-                    print(f"Jobs for {company} are fresh ({latest[0][:10]}), skipping.")
-                    continue
-            except Exception:
-                pass
+        cursor.execute("DELETE FROM jobs WHERE company = ?", (company,))
+        conn.commit()
         print(f"Fetching jobs for {company}...")
         url = f"https://api.ashbyhq.com/posting-api/job-board/{slug}"
         try:
