@@ -300,7 +300,8 @@ html = """<!DOCTYPE html>
         .flip-card-outer:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.12); }
         .flip-card-inner { position: relative; width: 100%; height: 100%; min-height: 260px; transform-style: preserve-3d; transition: transform 0.42s ease; }
         .flip-card-inner.flipped { transform: rotateY(180deg); }
-        .flip-front, .flip-back { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; padding: 16px 18px 14px; display: flex; flex-direction: column; gap: 10px; overflow: hidden; }
+        .flip-front, .flip-back { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; padding: 16px 18px 14px; display: flex; flex-direction: column; gap: 10px; overflow: visible; }
+        .flip-card-outer { overflow: visible; }
         .flip-back { transform: rotateY(180deg); }
         .flip-icon { position: absolute; top: 8px; right: 10px; background: none; border: none; font-size: 1.05rem; color: #ccc; cursor: pointer !important; padding: 4px 6px; border-radius: 4px; line-height: 1; transition: color 0.15s; z-index: 10; }
         .flip-icon:hover { color: #888; }
@@ -313,7 +314,7 @@ html = """<!DOCTYPE html>
         .roles-text { font-size: 0.82rem; font-weight: 600; }
 
         /* Jobs popover */
-        .jobs-popover { display: none; position: absolute; top: calc(100% + 6px); left: 0; right: 0; background: white; border: 1px solid #e0e0e0; border-radius: 8px; box-shadow: 0 4px 18px rgba(0,0,0,0.12); padding: 10px 12px 12px; z-index: 300; max-height: 220px; overflow-y: auto; }
+        .jobs-popover { display: none; position: absolute; top: calc(100% + 6px); left: 0; right: 0; background: white; border: 1px solid #e0e0e0; border-radius: 8px; box-shadow: 0 4px 18px rgba(0,0,0,0.12); padding: 10px 12px 12px; z-index: 9999; max-height: 220px; overflow-y: auto; }
         .jobs-popover.open { display: block; }
         .dept-header { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; margin: 8px 0 3px; }
         .dept-header:first-child { margin-top: 0; }
