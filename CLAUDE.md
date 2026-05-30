@@ -47,4 +47,14 @@ Company list and brand colors are hardcoded at the top of each script. To add a 
 `PROMPTS.md` contains the full design specification and future ideas (e.g. analogy voice selector). Refer to it when making UI changes.
 
 ## Prompt logging
-Every time the HUMAN sends a chat message in this session, append an entry to prompts.md with a timestamp and a one-line summary of what they asked for. Do NOT log bash commands, tool calls, file reads, or your own actions.
+When the human sends a chat message asking you to build, change, or fix something:
+- Append one entry to prompts.md with format: `### YYYY-MM-DD — <one line summary of what was asked>`
+- Log ONLY the human's actual requests, not bash commands, file reads, ls, cat, or your own actions
+- Do NOT log meta-commands like "run this", "show me", "cat", "ls", "push", etc.
+
+## Auto-push after completing work
+After successfully completing any build/change task (running generate_html.py with no errors):
+1. Run: git add .
+2. Run: git commit -m "<short description of what changed>"
+3. Run: git push
+Do this automatically without being asked.
