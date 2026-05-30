@@ -176,6 +176,20 @@ Tested prompt logging.
 
 Listed files in project root.
 
+### 2026-05-30 — Fix company tag pill, competitor pill links, sparkline bars
+
+Fixed 3 bugs in generate_html.py: (1) company tag pill spanning full card width, (2) competitor pills not clickable/linking to websites, (3) sparkline only showing one bar instead of all 6 months.
+
+### 2026-05-30 — Session summary from claude.ai chat
+
+- Fixed git conflict issues (git pull --rebase workflow)
+- Confirmed analytics view was live but hidden by browser cache
+- Updated CLAUDE.md with tighter prompt logging rules and auto-push after completed tasks
+- Fixed 3 bugs: company tag pill width, competitor pills now link to websites, sparkline shows all 6 months with faint bars for zero-data months
+- Sparkline will fill in naturally over time as daily workflow pulls more blog posts
+- Jobs links confirmed working (Ashby requires JS, opens fine in real browser)
+- Confirmed pie charts were never built -- need to design and add
+
 ### Future Ideas
 
 **Analogy Voice Selector:**
