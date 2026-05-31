@@ -470,6 +470,16 @@ html = """<!DOCTYPE html>
         .hiring-trends-table td { padding: 7px 12px; border-bottom: 1px solid #f0f0f0; color: #444; }
         .hiring-trends-table .ht-date { color: #999; font-size: 0.72rem; white-space: nowrap; }
         .hiring-trends-table tbody tr:hover { background: #fafafa; }
+
+        @media (max-width: 600px) {
+            .heading { font-size: 1.8rem; margin-top: 1.5rem; margin-bottom: 1.5rem; }
+            .heading .line1 { padding-left: 0; text-align: center; }
+            .company-row { grid-template-columns: 1fr; }
+            .voice-buttons { display: flex; flex-wrap: wrap; gap: 8px; }
+            .voice-btn { flex: 1 1 calc(50% - 8px); min-width: 0; text-align: center; }
+            body { margin: 20px auto; }
+            .popover { width: calc(100vw - 40px) !important; left: 20px !important; }
+        }
     </style>
 <script>
     !function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(a!==void 0?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return a!=="posthog"&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="capture identify alias people.set people.set_once set_config register register_once unregister opt_out_capturing has_opted_out_capturing opt_in_capturing reset isFeatureEnabled onFeatureFlags getFeatureFlag getFeatureFlagPayload reloadFeatureFlags group updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures getActiveMatchingSurveys getSurveys onSessionId".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
@@ -513,7 +523,7 @@ html = """<!DOCTYPE html>
         </div>
     </div>
 
-    <div>
+    <div style="overflow-x: hidden;">
 """
 
 # ── per-company rows ───────────────────────────────────────────────────────────
