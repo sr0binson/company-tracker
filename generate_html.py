@@ -449,7 +449,7 @@ html = """<!DOCTYPE html>
         /* Flip card (right column) */
         .flip-card-outer { background: white; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); transition: box-shadow 0.2s ease; perspective: 1100px; min-height: 370px; }
         .flip-card-outer:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.12); }
-        .flip-card-inner { position: relative; width: 100%; height: 100%; min-height: 370px; transform-style: preserve-3d; transition: transform 0.42s ease; overflow: visible; }
+        .flip-card-inner { position: relative; width: 100%; min-height: 370px; transform-style: preserve-3d; transition: transform 0.42s ease; overflow: visible; }
         .flip-card-inner.flipped { transform: rotateY(180deg); }
         .flip-front { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; padding: 16px 18px 14px; display: flex; flex-direction: column; gap: 10px; overflow: visible; }
         .flip-back { position: absolute; top: 0; left: 0; right: 0; min-height: 100%; backface-visibility: hidden; -webkit-backface-visibility: hidden; padding: 16px 18px 14px; display: flex; flex-direction: column; gap: 10px; overflow: visible; transform: rotateY(180deg); }
@@ -1107,9 +1107,27 @@ html += """
         });
 
         // ── flip cards ───────────────────────────────────────────────────────
+        var FLIP_MIN_H = 370;
+        function syncFlipHeight(outer, inner) {
+            // Both faces are position:absolute so the card won't grow on its own.
+            // Measure the visible face and push outer min-height to match.
+            if (inner.classList.contains('flipped')) {
+                var back = outer.querySelector('.flip-back');
+                if (back) {
+                    outer.style.minHeight = Math.max(FLIP_MIN_H, back.scrollHeight) + 'px';
+                    outer.style.zIndex    = '10';
+                }
+            } else {
+                outer.style.minHeight = '';
+                outer.style.zIndex    = '';
+            }
+        }
         function flipCard(id) {
             var inner = document.getElementById('flip-inner-' + id);
-            if (inner) inner.classList.toggle('flipped');
+            if (!inner) return;
+            var outer = inner.closest('.flip-card-outer');
+            inner.classList.toggle('flipped');
+            if (outer) syncFlipHeight(outer, inner);
         }
 
         // ── jobs popover ─────────────────────────────────────────────────────
@@ -1137,19 +1155,16 @@ html += """
             }
         }
 
-        // Expand flip card height + lift z-index when Community Pulse titles dropdown opens
+        // Re-sync card height when the Community Pulse titles dropdown opens or closes
         document.querySelectorAll('.pulse-details').forEach(function(det) {
             det.addEventListener('toggle', function() {
                 var outer = det.closest('.flip-card-outer');
+                var inner = outer ? outer.querySelector('.flip-card-inner') : null;
                 var back  = det.closest('.flip-back');
                 if (!outer || !back) return;
-                if (det.open) {
-                    outer.style.minHeight = (back.scrollHeight + 8) + 'px';
-                    outer.style.zIndex    = '50';
-                } else {
-                    outer.style.minHeight = '';
-                    outer.style.zIndex    = '';
-                }
+                // Always re-measure — scrollHeight already reflects the new open/closed state
+                outer.style.minHeight = Math.max(FLIP_MIN_H, back.scrollHeight) + 'px';
+                outer.style.zIndex    = det.open ? '50' : '10';
             });
         });
     </script>
