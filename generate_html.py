@@ -396,19 +396,18 @@ html = """<!DOCTYPE html>
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; script-src 'self' 'unsafe-inline'; connect-src 'none'; object-src 'none'; base-uri 'self';">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Company Tracker</title>
-    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;700&family=Oswald:ital,wght@1,700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;700&family=Oswald:wght@700&display=swap" rel="stylesheet">
     <style>
         * { box-sizing: border-box; }
-        body { font-family: 'Sora', sans-serif; max-width: 1100px; margin: 0 auto; padding: 320px 20px 100vh; background: #f9f9f9; }
+        body { font-family: 'Sora', sans-serif; max-width: 1100px; margin: 0 auto; padding: 280px 20px 100vh; background: #f9f9f9; }
         h1 { margin-top: 60px; }
         .sticky-header { position: fixed; top: 33px; left: 50%; transform: translateX(-50%); width: 100%; max-width: 1100px; z-index: 100; background: #f9f9f9; padding: 20px 20px 16px; border-bottom: 1px solid #e8e8e8; }
         .header-logo { position: absolute; top: 12px; right: 20px; height: 70px; width: auto; pointer-events: none; mix-blend-mode: multiply; }
         .voice-label { font-size: 0.68rem; color: #bbb; font-family: 'Sora', sans-serif; font-weight: 300; margin: 0 0 7px 0; letter-spacing: 0.3px; }
-        .heading { font-size: 3rem; font-weight: 700; margin-top: 80px; line-height: 1.2; margin-bottom: 0.6rem; }
+        .heading { margin-top: 40px; line-height: 1.1; margin-bottom: 0.4rem; text-align: center; }
         .heading span { display: block; }
-        .heading .line1 { text-align: left; padding-left: 15%; }
-        .heading .line2 { text-align: center; }
-        #heading-line2 { font-family: 'Oswald', sans-serif; font-style: italic; font-weight: 700; color: #FF6B00; }
+        .heading .line1 { font-family: 'Oswald', sans-serif; font-size: 3.6rem; font-weight: 700; color: #111; text-transform: uppercase; letter-spacing: 1.5px; }
+        .heading .line2 { font-family: 'Sora', sans-serif; font-size: 1rem; font-weight: 300; font-style: italic; color: #bbb; margin-top: 5px; }
 
         /* Row layout */
         .company-row { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px; align-items: stretch; }
@@ -565,8 +564,9 @@ html = """<!DOCTYPE html>
         @media (max-width: 600px) {
             .ticker-wrap { padding: 6px 0; }
             .ticker-item { font-size: 0.7rem; padding: 0 20px; }
-            .heading { font-size: 1.8rem; margin-top: 1.5rem; margin-bottom: 1.5rem; }
-            .heading .line1 { padding-left: 0; text-align: center; }
+            .heading { margin-top: 1rem; margin-bottom: 0.8rem; }
+            .heading .line1 { font-size: 2.2rem; letter-spacing: 0.5px; }
+            .heading .line2 { font-size: 0.88rem; }
             .company-row { grid-template-columns: 1fr; }
             .voice-global { gap: 6px; }
             .voice-pill { flex: 1 1 auto; text-align: center; min-width: 0; }
@@ -603,8 +603,8 @@ html = """<!DOCTYPE html>
     <div class="sticky-header">
         <img src="SteezyR.png" class="header-logo" alt="">
         <div class="heading">
-            <span class="line1" id="heading-line1">Cool Companies,</span>
-            <span class="line2" id="heading-line2">Fresh Releases.</span>
+            <span class="line1" id="heading-line1">The Nightly Rummager</span>
+            <span class="line2" id="heading-line2">Coolest companies on earth, unearthed&hellip;</span>
         </div>
         <p class="voice-label">Choose your own voice</p>
         <div class="voice-global">
@@ -1034,11 +1034,11 @@ html += """
         // ── voice pills ──────────────────────────────────────────────────────
         window.activeVoice = 'plain';
         var voiceContent = {
-            '90s':     { line1: 'Dopest Companies,',          line2: 'Da Bomb Drops.',           blog: 'Word On The Street',      comingSoon: 'coming soon, no doubt' },
-            genz:      { line1: 'Lowkey Cool Companies,',     line2: 'No Cap Releases.',          blog: 'Tea & Updates',           comingSoon: 'dropping soon bestie' },
-            medieval:  { line1: 'Hear Ye, Noble Companies,',  line2: 'Fresh Proclamations.',      blog: "The Town Crier's Scroll", comingSoon: 'forthcoming, good patron' },
-            aifluff:   { line1: 'Industry-Leading Companies,',line2: 'Transformative Releases.',  blog: 'Thought Leadership Hub',  comingSoon: 'exciting content incoming' },
-            plain:     { line1: 'Cool Companies,',            line2: 'Fresh Releases.',           blog: 'Updates',                 comingSoon: 'Coming soon' }
+            '90s':     { line1: 'The Nightly Rummager', line2: 'Straight up dopest companies on earth, word...',      blog: 'Word On The Street',      comingSoon: 'coming soon, no doubt' },
+            genz:      { line1: 'The Nightly Rummager', line2: 'Lowkey the coolest companies, no cap...',              blog: 'Tea & Updates',           comingSoon: 'dropping soon bestie' },
+            medieval:  { line1: 'The Nightly Rummager', line2: 'Finest companies of the realm, unearthed...',          blog: "The Town Crier's Scroll", comingSoon: 'forthcoming, good patron' },
+            aifluff:   { line1: 'The Nightly Rummager', line2: 'Industry-leading companies, strategically surfaced...', blog: 'Thought Leadership Hub',  comingSoon: 'exciting content incoming' },
+            plain:     { line1: 'The Nightly Rummager', line2: 'Coolest companies on earth, unearthed…',          blog: 'Updates',                 comingSoon: 'Coming soon' }
         };
         function setVoice(voice, btn) {
             window.activeVoice = voice;
