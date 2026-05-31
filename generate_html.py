@@ -379,7 +379,7 @@ html = """<!DOCTYPE html>
         .sticky-header { position: fixed; top: 33px; left: 50%; transform: translateX(-50%); width: 100%; max-width: 1100px; z-index: 100; background: #f9f9f9; padding: 20px 20px 16px; border-bottom: 1px solid #e8e8e8; }
         .header-logo { position: absolute; top: 12px; right: 20px; height: 70px; width: auto; pointer-events: none; mix-blend-mode: multiply; }
         .voice-label { font-size: 0.68rem; color: #bbb; font-family: 'Sora', sans-serif; font-weight: 300; margin: 0 0 7px 0; letter-spacing: 0.3px; }
-        .heading { font-size: 3rem; font-weight: 700; margin-top: 80px; line-height: 1.2; margin-bottom: 1.2rem; }
+        .heading { font-size: 3rem; font-weight: 700; margin-top: 80px; line-height: 1.2; margin-bottom: 0.6rem; }
         .heading span { display: block; }
         .heading .line1 { text-align: left; padding-left: 15%; }
         .heading .line2 { text-align: center; }
@@ -579,7 +579,7 @@ html = """<!DOCTYPE html>
         </div>
     </div>
 
-    <div style="overflow-x: hidden;">
+    <div style="overflow-x: hidden; margin-top: 120px;">
 """
 
 # ── News ticker ───────────────────────────────────────────────────────────────
