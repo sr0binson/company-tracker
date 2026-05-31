@@ -474,12 +474,17 @@
     </div>
 
 <div class="hiring-trends-wrap">
-  <h2 class="hiring-trends-heading">Hiring Trends</h2>
-  <table class="hiring-trends-table">
-    <thead><tr><th>Date</th><th>PostHog</th><th>Linear</th><th>Zapier</th><th>Replit</th></tr></thead>
-    <tbody><tr><td class="ht-date">2026-05-30</td><td>16</td><td>21</td><td>22</td><td>86</td></tr>
+  <div onclick="toggleHiringTable()" style="cursor:pointer; display:flex; align-items:center; gap:8px; margin-bottom:16px;">
+    <span style="font-family:'Sora',sans-serif; font-size:1rem; font-weight:700; color:#111;">Hiring Trends</span>
+    <span id="hiring-toggle-icon" style="font-size:0.8rem; color:#aaa;">&#9660; show</span>
+  </div>
+  <div id="hiring-table-wrapper" style="display:none;">
+    <table class="hiring-trends-table">
+      <thead><tr><th>Date</th><th>PostHog</th><th>Linear</th><th>Zapier</th><th>Replit</th></tr></thead>
+      <tbody><tr><td class="ht-date">2026-05-30</td><td>16</td><td>21</td><td>22</td><td>86</td></tr>
 </tbody>
-  </table>
+    </table>
+  </div>
 </div>
 <div class="delta-cards-wrap"><div class="delta-card" style="border-top-color:#E8E0D0;">
   <div class="delta-count" style="color:#C06820;">16</div>
@@ -719,6 +724,17 @@
                 document.querySelectorAll('.jobs-popover.open').forEach(function(el) { el.classList.remove('open'); });
             }
         });
+        function toggleHiringTable() {
+            var wrapper = document.getElementById('hiring-table-wrapper');
+            var icon = document.getElementById('hiring-toggle-icon');
+            if (wrapper.style.display === 'none') {
+                wrapper.style.display = 'block';
+                icon.textContent = '▲ hide';
+            } else {
+                wrapper.style.display = 'none';
+                icon.textContent = '▼ show';
+            }
+        }
     </script>
 </body>
 </html>

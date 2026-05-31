@@ -718,11 +718,16 @@ if hiring_data:
 
     html += f"""
 <div class="hiring-trends-wrap">
-  <h2 class="hiring-trends-heading">Hiring Trends</h2>
-  <table class="hiring-trends-table">
-    <thead><tr><th>Date</th>{header_cells}</tr></thead>
-    <tbody>{rows_html}</tbody>
-  </table>
+  <div onclick="toggleHiringTable()" style="cursor:pointer; display:flex; align-items:center; gap:8px; margin-bottom:16px;">
+    <span style="font-family:'Sora',sans-serif; font-size:1rem; font-weight:700; color:#111;">Hiring Trends</span>
+    <span id="hiring-toggle-icon" style="font-size:0.8rem; color:#aaa;">&#9660; show</span>
+  </div>
+  <div id="hiring-table-wrapper" style="display:none;">
+    <table class="hiring-trends-table">
+      <thead><tr><th>Date</th>{header_cells}</tr></thead>
+      <tbody>{rows_html}</tbody>
+    </table>
+  </div>
 </div>
 """
 
@@ -983,6 +988,17 @@ html += """
                 document.querySelectorAll('.jobs-popover.open').forEach(function(el) { el.classList.remove('open'); });
             }
         });
+        function toggleHiringTable() {
+            var wrapper = document.getElementById('hiring-table-wrapper');
+            var icon = document.getElementById('hiring-toggle-icon');
+            if (wrapper.style.display === 'none') {
+                wrapper.style.display = 'block';
+                icon.textContent = '▲ hide';
+            } else {
+                wrapper.style.display = 'none';
+                icon.textContent = '▼ show';
+            }
+        }
     </script>
 </body>
 </html>
