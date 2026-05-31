@@ -409,6 +409,12 @@ for company, url in FEEDS.items():
                 link = get_text("link")
                 updated = normalize_date(get_text("pubDate"))
                 content = sanitize_input(get_text("description"))
+                if not content:
+                    # Fall back to content:encoded (used by Linear and similar feeds)
+                    _encoded = entry.find("{http://purl.org/rss/1.0/modules/content/}encoded")
+                    if _encoded is not None and _encoded.text:
+                        _raw = re.sub(r'<[^>]+>', ' ', _encoded.text)
+                        content = sanitize_input(re.sub(r'\s+', ' ', _raw).strip())
                 entry_id = get_text("guid") or link
 
                 if not title or not link:
@@ -421,6 +427,8 @@ for company, url in FEEDS.items():
                 if existing is None:
                     print(f"  Getting AI summary for: {title}")
                     summary, analogy = get_ai_summary(title, content)
+                    if not summary:
+                        analogy = None
                     voices = {col: get_voice_analogy(analogy, instr) for col, instr in VOICE_PROMPTS.items()}
                     cursor.execute("""
                         INSERT OR IGNORE INTO blog_posts
@@ -438,6 +446,8 @@ for company, url in FEEDS.items():
                 elif existing[1] is None or existing[1] == '':
                     print(f"  Backfilling analogy for: {title}")
                     _, analogy = get_ai_summary(title, content)
+                    if not analogy:
+                        analogy = None
                     voices = {col: get_voice_analogy(analogy, instr) for col, instr in VOICE_PROMPTS.items()}
                     cursor.execute("""
                         UPDATE blog_posts SET analogy = ?,
