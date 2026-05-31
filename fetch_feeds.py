@@ -4,8 +4,6 @@ import sqlite3
 import json
 import os
 import re
-import csv
-import io
 from datetime import date as date_cls
 from email.utils import parsedate_to_datetime
 from dotenv import load_dotenv
@@ -80,17 +78,6 @@ cursor.execute("""
         team TEXT,
         snapshot_date TEXT,
         UNIQUE(company, job_id, snapshot_date)
-    )
-""")
-
-cursor.execute("""
-    CREATE TABLE IF NOT EXISTS founder_posts (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        company TEXT,
-        title TEXT,
-        link TEXT,
-        date TEXT,
-        UNIQUE(link)
     )
 """)
 
@@ -584,28 +571,6 @@ Do not use em dashes."""
 calculate_hiring_deltas(cursor, _today)
 generate_weekly_hiring_summary(cursor, _today)
 
-def fetch_founder_posts(cursor):
-    url = "https://docs.google.com/spreadsheets/d/11ss-gTvO5DtChuCiVIafyzwGiwzAw--KiA-64lhwhGA/export?format=csv"
-    try:
-        resp = urllib.request.urlopen(url, timeout=10)
-        text = resp.read().decode("utf-8")
-        reader = csv.reader(io.StringIO(text))
-        next(reader)  # skip header
-        for parts in reader:
-            if len(parts) >= 3:
-                company = parts[0].strip()
-                title   = parts[1].strip()
-                link    = parts[2].strip()
-                date    = parts[3].strip() if len(parts) > 3 else ""
-                cursor.execute("""
-                    INSERT OR IGNORE INTO founder_posts (company, title, link, date)
-                    VALUES (?, ?, ?, ?)
-                """, (company, title, link, date))
-        print("Founder posts fetched from Google Sheet")
-    except Exception as e:
-        print(f"Error fetching founder posts: {e}")
-
-fetch_founder_posts(cursor)
 conn.commit()
 
 print("\nVerification — first 3 PostHog job URLs:")

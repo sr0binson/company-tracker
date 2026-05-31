@@ -80,16 +80,6 @@ try:
 except Exception:
     ticker_posts = []
 
-try:
-    founder_posts = cursor.execute("""
-        SELECT company, title, link, date
-        FROM founder_posts
-        ORDER BY date DESC
-        LIMIT 10
-    """).fetchall()
-except Exception:
-    founder_posts = []
-
 conn.close()
 
 # ── helpers ──────────────────────────────────────────────────────────────────
@@ -523,17 +513,6 @@ html = """<!DOCTYPE html>
         .hiring-summary-date { font-size: 0.7rem; color: #ccc; }
         .hiring-summary-text { font-size: 0.85rem; color: #444; line-height: 1.65; }
 
-        /* Founder posts */
-        .founder-wrap { max-width: 1100px; margin: 24px auto 60px; padding: 0 20px; font-family: 'Sora', sans-serif; }
-        .founder-card { background: white; border-radius: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); padding: 20px 24px; }
-        .founder-heading { font-size: 1rem; font-weight: 700; color: #111; margin-bottom: 14px; }
-        .founder-row { display: flex; align-items: baseline; gap: 10px; padding: 9px 0; border-bottom: 1px solid #f0f0f0; }
-        .founder-row:last-child { border-bottom: none; }
-        .founder-tag { font-size: 0.62rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; padding: 2px 7px; border-radius: 3px; white-space: nowrap; }
-        .founder-title { font-size: 0.82rem; color: #222; text-decoration: none; flex: 1; line-height: 1.4; }
-        .founder-title:hover { text-decoration: underline; }
-        .founder-date { font-size: 0.68rem; color: #ccc; white-space: nowrap; }
-
         /* News ticker */
         .ticker-wrap { position: fixed; top: 0; left: 0; width: 100%; background: #0a0a0a; border-bottom: 1px solid #1a1a1a; padding: 8px 0; z-index: 9999; overflow: hidden; font-family: 'Courier New', monospace; }
         .ticker-track { display: flex; width: max-content; animation: ticker-scroll 60s linear infinite; }
@@ -840,27 +819,6 @@ if latest_summary:
 """
 elif hiring_deltas:
     html += '<div style="height:60px;"></div>\n'
-
-# ── Founder posts ─────────────────────────────────────────────────────────────
-if founder_posts:
-    rows_html = ''
-    for fp_company, fp_title, fp_link, fp_date in founder_posts:
-        fp_color  = company_colors.get(fp_company, '#e0e0e0')
-        fp_accent = company_accent.get(fp_company, '#888')
-        rows_html += (
-            f'<div class="founder-row">'
-            f'<span class="founder-tag" style="background:{fp_color};color:{fp_accent};">{html_escape(fp_company)}</span>'
-            f'<a class="founder-title" href="{html_escape(fp_link)}" target="_blank" rel="noopener">{html_escape(fp_title)}</a>'
-            f'<span class="founder-date">{html_escape(fp_date)}</span>'
-            f'</div>\n'
-        )
-    html += f"""<div class="founder-wrap">
-  <div class="founder-card">
-    <div class="founder-heading">From the Source</div>
-    {rows_html}
-  </div>
-</div>
-"""
 
 # ── JS ────────────────────────────────────────────────────────────────────────
 
