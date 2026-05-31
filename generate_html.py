@@ -82,17 +82,24 @@ except Exception:
 
 try:
     reddit_rows = cursor.execute("""
-        SELECT company, summary, sources_json, raw_titles_json FROM reddit_sentiment
+        SELECT company, summary, sources_json, raw_titles_json,
+               summary_90s, summary_genz, summary_medieval, summary_aifluff
+        FROM reddit_sentiment
         WHERE fetched_date = (SELECT MAX(fetched_date) FROM reddit_sentiment WHERE company = reddit_sentiment.company)
         GROUP BY company
     """).fetchall()
     reddit_sentiment_by_company = {
         company: {
-            "summary": summary or "",
-            "sources": json.loads(sources_json or "[]"),
-            "titles":  json.loads(raw_titles_json or "[]"),
+            "summary":          summary or "",
+            "sources":          json.loads(sources_json or "[]"),
+            "titles":           json.loads(raw_titles_json or "[]"),
+            "summary_90s":      s90s or "",
+            "summary_genz":     sgenz or "",
+            "summary_medieval": smed or "",
+            "summary_aifluff":  saif or "",
         }
-        for company, summary, sources_json, raw_titles_json in reddit_rows
+        for company, summary, sources_json, raw_titles_json,
+            s90s, sgenz, smed, saif in reddit_rows
     }
 except Exception as e:
     print(f"Warning: reddit_sentiment query failed: {e}")
@@ -639,12 +646,27 @@ html = html.replace("{ticker_placeholder}", _ticker_html)
 
 # ── Community Pulse card builder ──────────────────────────────────────────────
 
-def _build_pulse_html(summary, sources, titles, esc):
+def _build_pulse_html(pulse_data, esc):
+    summary = pulse_data.get("summary", "")
     if not summary:
         return ''
+
+    sources = pulse_data.get("sources", [])
+    titles  = pulse_data.get("titles", [])
+    s90s    = pulse_data.get("summary_90s", "") or summary
+    sgenz   = pulse_data.get("summary_genz", "") or summary
+    smed    = pulse_data.get("summary_medieval", "") or summary
+    saif    = pulse_data.get("summary_aifluff", "") or summary
+
+    data_attrs = (f'data-plain="{esc(summary)}" '
+                  f'data-90s="{esc(s90s)}" '
+                  f'data-genz="{esc(sgenz)}" '
+                  f'data-medieval="{esc(smed)}" '
+                  f'data-aifluff="{esc(saif)}"')
+
     parts = ['<div class="back-section">',
              '<div class="back-header">Community Pulse</div>',
-             f'<div class="reddit-sentiment-text">{esc(summary)}</div>']
+             f'<div class="reddit-sentiment-text" {data_attrs}>{esc(summary)}</div>']
 
     if sources:
         source_links = ', '.join(
@@ -681,10 +703,7 @@ for company in ["PostHog", "Linear", "Zapier", "Replit"]:
 
     bsvg  = bubble_svg(kw, color)
     ssvg  = sparkline_svg(monthly, accent)
-    pulse_data     = reddit_sentiment_by_company.get(company, {})
-    reddit_summary = pulse_data.get("summary", "")
-    pulse_sources  = pulse_data.get("sources", [])
-    pulse_titles   = pulse_data.get("titles", [])
+    pulse_data = reddit_sentiment_by_company.get(company, {})
 
     rtypes     = release_type_counts.get(company, {'feature': 0, 'bugfix': 0, 'maintenance': 0})
     feat_color = accent
@@ -801,7 +820,7 @@ for company in ["PostHog", "Linear", "Zapier", "Replit"]:
         <div class="back-header">Competes with</div>
         <div class="pill-row">{comp_pills}</div>
       </div>
-      {_build_pulse_html(reddit_summary, pulse_sources, pulse_titles, html_escape)}
+      {_build_pulse_html(pulse_data, html_escape)}
     </div>
 
   </div>
@@ -1028,6 +1047,9 @@ html += """
             document.querySelectorAll('.post-analogy').forEach(function(el) {
                 var text = el.dataset[voice] || '';
                 el.textContent = text ? '"' + text + '"' : '';
+            });
+            document.querySelectorAll('.reddit-sentiment-text').forEach(function(el) {
+                el.textContent = el.dataset[voice] || el.dataset.plain || '';
             });
             var v = voiceContent[voice];
             if (!v) return;

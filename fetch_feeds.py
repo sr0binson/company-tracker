@@ -133,7 +133,8 @@ cursor.execute("""
     )
 """)
 
-for _col in ("sources_json", "raw_titles_json"):
+for _col in ("sources_json", "raw_titles_json",
+             "summary_90s", "summary_genz", "summary_medieval", "summary_aifluff"):
     try:
         cursor.execute(f"ALTER TABLE reddit_sentiment ADD COLUMN {_col} TEXT")
     except Exception:
@@ -235,6 +236,59 @@ def get_voice_analogy(original_analogy, voice_instruction):
             return result["content"][0]["text"].strip()
     except Exception as e:
         print(f"Voice analogy error: {e}")
+        return ""
+
+PULSE_VOICE_PROMPTS = {
+    "summary_90s": (
+        "Rewrite this community sentiment summary in late 90s R&B and hip hop slang. "
+        "Use phrases like 'all that and a bag of chips', 'da bomb', 'feel me', 'no doubt', "
+        "'word', 'straight up', 'mad [adjective]', 'on the real', 'for real for real'. "
+        "3-4 sentences. No quotes. No em dashes."
+    ),
+    "summary_genz": (
+        "Rewrite this community sentiment summary in Gen Z slang — lowkey, slay, no cap, "
+        "understood the assignment, it's giving, rent free, bussin, based. "
+        "3-4 sentences. No quotes. No em dashes."
+    ),
+    "summary_medieval": (
+        "Rewrite this community sentiment summary as if proclaimed by a medieval town crier "
+        "addressing the townspeople in the square. "
+        "3-4 sentences. No quotes. No em dashes."
+    ),
+    "summary_aifluff": (
+        "Rewrite this community sentiment summary as hollow AI corporate marketing speak — "
+        "synergies, paradigms, leverage, ecosystem, disruptive, transformative, value proposition, "
+        "best-in-class. 3-4 sentences. No quotes. No em dashes."
+    ),
+}
+
+def get_pulse_voice_summary(plain_summary, voice_instruction):
+    if not ANTHROPIC_API_KEY or not plain_summary:
+        return ""
+
+    prompt = f"{voice_instruction}\n\nOriginal summary:\n{plain_summary}"
+
+    data = json.dumps({
+        "model": "claude-haiku-4-5",
+        "max_tokens": 300,
+        "messages": [{"role": "user", "content": prompt}]
+    }).encode("utf-8")
+
+    req = urllib.request.Request(
+        "https://api.anthropic.com/v1/messages",
+        data=data,
+        headers={
+            "Content-Type": "application/json",
+            "x-api-key": ANTHROPIC_API_KEY,
+            "anthropic-version": "2023-06-01"
+        }
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=20) as response:
+            result = json.loads(response.read())
+            return result["content"][0]["text"].strip()
+    except Exception as e:
+        print(f"  Pulse voice error: {e}")
         return ""
 
 # Backfill base analogy for existing posts that predate this feature
@@ -427,9 +481,10 @@ Write 3-4 sentences summarizing community sentiment about {company}. Cover what 
 def fetch_reddit_sentiment():
     today = date_cls.today().isoformat()
     for company, subreddit in REDDIT_SUBREDDITS.items():
-        # Skip only if we already have a fully-populated row for today
+        # Skip only if we already have a fully-populated row (with voice summaries) for today
         existing = cursor.execute(
-            "SELECT id FROM reddit_sentiment WHERE company = ? AND fetched_date = ? AND sources_json IS NOT NULL",
+            "SELECT id FROM reddit_sentiment WHERE company = ? AND fetched_date = ? "
+            "AND sources_json IS NOT NULL AND summary_90s IS NOT NULL",
             (company, today)
         ).fetchone()
         if existing:
@@ -486,16 +541,24 @@ def fetch_reddit_sentiment():
         summary    = get_community_pulse_summary(company, all_posts)
         raw_titles = [p["title"] for p in all_posts]
 
-        # Replace any incomplete row from today (missing sources_json) with the full one
+        print(f"  Generating voice summaries for {company}...")
+        voices = {col: get_pulse_voice_summary(summary, instr)
+                  for col, instr in PULSE_VOICE_PROMPTS.items()}
+
+        # Replace any incomplete row from today with the fully-populated one
         cursor.execute("DELETE FROM reddit_sentiment WHERE company = ? AND fetched_date = ?",
                        (company, today))
         cursor.execute(
-            """INSERT INTO reddit_sentiment (company, summary, fetched_date, sources_json, raw_titles_json)
-               VALUES (?, ?, ?, ?, ?)""",
-            (company, summary, today, json.dumps(sources), json.dumps(raw_titles))
+            """INSERT INTO reddit_sentiment
+               (company, summary, fetched_date, sources_json, raw_titles_json,
+                summary_90s, summary_genz, summary_medieval, summary_aifluff)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+            (company, summary, today, json.dumps(sources), json.dumps(raw_titles),
+             voices["summary_90s"], voices["summary_genz"],
+             voices["summary_medieval"], voices["summary_aifluff"])
         )
         conn.commit()
-        print(f"  {company}: stored ({len(all_posts)} posts, {len(sources)} sources).")
+        print(f"  {company}: stored ({len(all_posts)} posts, {len(sources)} sources, 5 voices).")
 
 ASHBY_SLUGS = {
     "PostHog": "posthog",
