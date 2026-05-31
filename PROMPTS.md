@@ -217,3 +217,5 @@ Fixed 3 bugs in generate_html.py: (1) company tag pill spanning full card width,
 ### 2026-05-31 — Added Reddit sentiment fetching via public RSS feeds and Community Pulse display on flip card back faces
 
 ### 2026-05-31 — Added footer with creature tagline and non-affiliation disclaimer
+
+### 2026-05-31 — Added posthog.com/questions (Strapi API) and community.zapier.com (HTML scraper) as additional sources for Community Pulse; added sources line with links+counts and collapsible raw titles dropdown to flip card back
