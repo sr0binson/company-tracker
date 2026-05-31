@@ -1108,7 +1108,7 @@ html += """
                 });
             }
 
-            // ── subtitle typewriter + dirt burst ─────────────────────────────
+            // ── subtitle typewriter ───────────────────────────────────────────
             var tw     = document.getElementById('subtitle-typewriter');
             var cursor = document.getElementById('subtitle-cursor');
             if (tw && cursor) {
@@ -1124,53 +1124,10 @@ html += """
                             setTimeout(function() {
                                 cursor.classList.remove('blinking');
                                 cursor.style.opacity = '0';
-                                triggerDirtBurst(tw);
                             }, 480);
                         }
                     }, 78);
                 }, 700);
-            }
-        });
-
-        function triggerDirtBurst(el) {
-            var rect = el.getBoundingClientRect();
-            var ox = rect.left + rect.width * 0.6;
-            var oy = rect.top  + rect.height * 0.5;
-            var colors = ['#6B4226','#8B6914','#A0522D','#C19A6B','#5C3D1E','#D2B48C','#7B5B3A','#4A3728'];
-            var count = 7;
-            for (var i = 0; i < count; i++) {
-                (function(idx) {
-                    var dot  = document.createElement('div');
-                    var size = 3 + Math.random() * 4;
-                    // spread mostly upward: -150deg to -30deg in screen coords
-                    var angleDeg = -150 + Math.random() * 120;
-                    var rad  = angleDeg * Math.PI / 180;
-                    var dist = 18 + Math.random() * 28;
-                    var dx   = Math.cos(rad) * dist;
-                    var dy   = Math.sin(rad) * dist;
-                    var dur  = 480 + Math.random() * 260;
-                    var delay = idx * 28;
-                    var color = colors[Math.floor(Math.random() * colors.length)];
-                    dot.style.cssText = [
-                        'position:fixed','pointer-events:none','z-index:99999',
-                        'border-radius:50%',
-                        'width:' + size.toFixed(1) + 'px',
-                        'height:' + size.toFixed(1) + 'px',
-                        'background:' + color,
-                        'left:' + ox + 'px','top:' + oy + 'px',
-                        'opacity:1',
-                        'transform:translate(0,0)',
-                        'transition:transform ' + dur + 'ms ease-out ' + delay + 'ms, opacity ' + dur + 'ms ease-out ' + delay + 'ms'
-                    ].join(';');
-                    document.body.appendChild(dot);
-                    requestAnimationFrame(function() {
-                        requestAnimationFrame(function() {
-                            dot.style.transform = 'translate(' + dx.toFixed(1) + 'px,' + dy.toFixed(1) + 'px)';
-                            dot.style.opacity   = '0';
-                        });
-                    });
-                    setTimeout(function() { dot.parentNode && dot.parentNode.removeChild(dot); }, dur + delay + 100);
-                })(i);
             }
         }
 
