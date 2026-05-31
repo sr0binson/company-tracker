@@ -215,3 +215,5 @@ Fixed 3 bugs in generate_html.py: (1) company tag pill spanning full card width,
 - Could be a small toggle or dropdown on each release card
 
 ### 2026-05-31 — Added Reddit sentiment fetching via public RSS feeds and Community Pulse display on flip card back faces
+
+### 2026-05-31 — Added footer with creature tagline and non-affiliation disclaimer
