@@ -42,6 +42,16 @@ try:
 except Exception:
     releases_rows = []
 
+try:
+    hiring_data = cursor.execute("""
+        SELECT company, snapshot_date, COUNT(*) as open_roles
+        FROM job_snapshots
+        GROUP BY company, snapshot_date
+        ORDER BY snapshot_date ASC
+    """).fetchall()
+except Exception:
+    hiring_data = []
+
 conn.close()
 
 # ── helpers ──────────────────────────────────────────────────────────────────
@@ -451,6 +461,15 @@ html = """<!DOCTYPE html>
         .zap-bolt-trail { position: fixed; pointer-events: none; z-index: 99997; transform: translate(-50%,-50%); animation: zap-trail-fade 0.35s ease forwards; }
         @keyframes zap-trail-fade { 0% { opacity:0.7; } 100% { opacity:0; } }
         #zap-cursor { position: fixed; pointer-events: none; z-index: 99999; transform: translate(-50%,-50%); display: none; }
+
+        /* Hiring Trends */
+        .hiring-trends-wrap { max-width: 1100px; margin: 40px auto 60px; padding: 0 20px; font-family: 'Sora', sans-serif; }
+        .hiring-trends-heading { font-size: 1.1rem; font-weight: 600; color: #333; margin-bottom: 14px; }
+        .hiring-trends-table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
+        .hiring-trends-table th { text-align: left; padding: 8px 12px; background: #f5f5f5; color: #666; font-weight: 600; border-bottom: 2px solid #e0e0e0; }
+        .hiring-trends-table td { padding: 7px 12px; border-bottom: 1px solid #f0f0f0; color: #444; }
+        .hiring-trends-table .ht-date { color: #999; font-size: 0.72rem; white-space: nowrap; }
+        .hiring-trends-table tbody tr:hover { background: #fafafa; }
     </style>
 <script>
     !function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(a!==void 0?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return a!=="posthog"&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="capture identify alias people.set people.set_once set_config register register_once unregister opt_out_capturing has_opted_out_capturing opt_in_capturing reset isFeatureEnabled onFeatureFlags getFeatureFlag getFeatureFlagPayload reloadFeatureFlags group updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures getActiveMatchingSurveys getSurveys onSessionId".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
@@ -635,6 +654,36 @@ for company in ["PostHog", "Linear", "Zapier", "Replit"]:
 """
 
 html += '    </div>\n'
+
+# ── Hiring Trends table ───────────────────────────────────────────────────────
+if hiring_data:
+    from collections import defaultdict
+    companies_order = ["PostHog", "Linear", "Zapier", "Replit"]
+    by_date = defaultdict(dict)
+    all_dates = []
+    for company, snap_date, count in hiring_data:
+        by_date[snap_date][company] = count
+        if snap_date not in all_dates:
+            all_dates.append(snap_date)
+    all_dates.sort()
+
+    header_cells = ''.join(f'<th>{c}</th>' for c in companies_order)
+    rows_html = ''
+    for d in all_dates:
+        cells = ''.join(
+            f'<td>{by_date[d].get(c, "—")}</td>' for c in companies_order
+        )
+        rows_html += f'<tr><td class="ht-date">{d}</td>{cells}</tr>\n'
+
+    html += f"""
+<div class="hiring-trends-wrap">
+  <h2 class="hiring-trends-heading">Hiring Trends</h2>
+  <table class="hiring-trends-table">
+    <thead><tr><th>Date</th>{header_cells}</tr></thead>
+    <tbody>{rows_html}</tbody>
+  </table>
+</div>
+"""
 
 # ── JS ────────────────────────────────────────────────────────────────────────
 

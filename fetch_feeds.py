@@ -68,6 +68,20 @@ cursor.execute("""
 """)
 
 cursor.execute("""
+    CREATE TABLE IF NOT EXISTS job_snapshots (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        company TEXT,
+        job_id TEXT,
+        title TEXT,
+        department TEXT,
+        location TEXT,
+        team TEXT,
+        snapshot_date TEXT,
+        UNIQUE(company, job_id, snapshot_date)
+    )
+""")
+
+cursor.execute("""
     CREATE TABLE IF NOT EXISTS blog_posts (
         id TEXT PRIMARY KEY,
         company TEXT,
@@ -424,6 +438,19 @@ for company, url in FEEDS.items():
 
 conn.commit()
 fetch_jobs()
+
+# ── daily job snapshot (copy from already-populated jobs table) ───────────────
+_today = date_cls.today().isoformat()
+_snap_rows = cursor.execute("SELECT company, title, department, location FROM jobs").fetchall()
+for _company, _title, _dept, _loc in _snap_rows:
+    _job_id = re.sub(r'\s+', '-', _title.lower())
+    cursor.execute("""
+        INSERT OR IGNORE INTO job_snapshots (company, job_id, title, department, location, team, snapshot_date)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+    """, (_company, _job_id, _title, _dept or "", _loc or "", "", _today))
+conn.commit()
+print(f"Job snapshots recorded for {_today}: {len(_snap_rows)} rows.")
+
 print("\nVerification — first 3 PostHog job URLs:")
 for row in cursor.execute(
     "SELECT title, url FROM jobs WHERE company='PostHog' ORDER BY title LIMIT 3"

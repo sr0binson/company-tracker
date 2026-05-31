@@ -193,6 +193,9 @@ Fixed 3 bugs in generate_html.py: (1) company tag pill spanning full card width,
 ### 2026-05-30 — Add release-type pie chart (features/bug fixes/maintenance) to flip card front with inline SVG donut and color-coded legend
 ### 2026-05-30 — Added pie charts showing release type breakdown (features/bugfixes/maintenance) per company using brand colors; fixed PostHog job links via sitemap scrape; fixed jobs popover showing for all 4 companies; fixed sparkline, company tag pill, competitor links
 
+### 2026-05-30 — Add PostHog analytics snippet to index.html (autocapture, pageview, pageleave)
+### 2026-05-30 — Add hover underline and opacity change to open roles link on flip card
+
 ### Future Ideas
 
 **Analogy Voice Selector:**
