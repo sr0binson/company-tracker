@@ -35,6 +35,13 @@ try:
 except Exception:
     jobs_rows = []
 
+try:
+    releases_rows = cursor.execute(
+        "SELECT company, summary FROM releases WHERE summary IS NOT NULL AND summary != ''"
+    ).fetchall()
+except Exception:
+    releases_rows = []
+
 conn.close()
 
 # ── helpers ──────────────────────────────────────────────────────────────────
@@ -44,6 +51,80 @@ def html_escape(s):
         return ''
     return (s.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
              .replace('"', '&quot;').replace("'", '&#39;'))
+
+def lighten_hex(hex_color, factor=0.45):
+    h = hex_color.lstrip('#')
+    r, g, b = int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16)
+    return '#{:02x}{:02x}{:02x}'.format(
+        min(255, int(r + (255 - r) * factor)),
+        min(255, int(g + (255 - g) * factor)),
+        min(255, int(b + (255 - b) * factor)),
+    )
+
+_FEATURE_WORDS = {
+    'adds','add','new','introduces','introduce','launch','launches','enable','enables',
+    'expand','expands','implement','implements','create','creates','allow','allows',
+    'brings','provide','provides','major','feature','features','support','supports',
+    'significant','offer','offers','debut','debuts','ship','ships',
+}
+_BUGFIX_WORDS = {
+    'fix','fixes','fixed','bug','bugs','patch','patches','patched','resolve','resolves',
+    'resolved','correct','corrects','corrected','error','errors','issue','issues',
+    'address','addresses','addressed','vulnerability','vulnerabilities','cve','security',
+}
+_MAINT_WORDS = {
+    'update','updates','updated','dependency','dependencies','maintenance','bump','bumps',
+    'upgrade','upgrades','upgraded','routine','minor','refactor','refactors','cleanup',
+    'compatibility','incremental','version','build','builds',
+}
+
+def classify_release(text):
+    if not text:
+        return 'maintenance'
+    words = set(re.findall(r'\b\w+\b', text.lower()))
+    b = len(words & _BUGFIX_WORDS)
+    f = len(words & _FEATURE_WORDS)
+    m = len(words & _MAINT_WORDS)
+    if b >= f and b > 0:
+        return 'bugfix'
+    if f > 0:
+        return 'feature'
+    return 'maintenance'
+
+def pie_chart_svg(counts, feat_color, bug_color, maint_color='#cccccc', size=72):
+    total = sum(counts.values())
+    cx = cy = size / 2
+    r = size / 2 - 3
+    ir = r * 0.52
+    if total == 0:
+        return (f'<svg viewBox="0 0 {size} {size}" width="{size}" height="{size}">'
+                f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="{r:.1f}" fill="#eee"/>'
+                f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="{ir:.1f}" fill="white"/></svg>')
+    color_map = {'feature': feat_color, 'bugfix': bug_color, 'maintenance': maint_color}
+    parts = [f'<svg viewBox="0 0 {size} {size}" width="{size}" height="{size}">']
+    start = -math.pi / 2
+    for key in ['feature', 'bugfix', 'maintenance']:
+        count = counts.get(key, 0)
+        if count == 0:
+            continue
+        angle = (count / total) * 2 * math.pi
+        if angle >= 2 * math.pi - 0.001:
+            parts.append(f'<circle cx="{cx:.2f}" cy="{cy:.2f}" r="{r:.2f}" '
+                         f'fill="{color_map[key]}" stroke="white" stroke-width="1"/>')
+        else:
+            end = start + angle
+            x1o = cx + r * math.cos(start);  y1o = cy + r * math.sin(start)
+            x2o = cx + r * math.cos(end);    y2o = cy + r * math.sin(end)
+            x1i = cx + ir * math.cos(end);   y1i = cy + ir * math.sin(end)
+            x2i = cx + ir * math.cos(start); y2i = cy + ir * math.sin(start)
+            la = 1 if angle > math.pi else 0
+            d = (f'M {x1o:.2f} {y1o:.2f} A {r:.2f} {r:.2f} 0 {la} 1 {x2o:.2f} {y2o:.2f} '
+                 f'L {x1i:.2f} {y1i:.2f} A {ir:.2f} {ir:.2f} 0 {la} 0 {x2i:.2f} {y2i:.2f} Z')
+            parts.append(f'<path d="{d}" fill="{color_map[key]}" stroke="white" stroke-width="1.2"/>')
+            start = end
+    parts.append(f'<circle cx="{cx:.2f}" cy="{cy:.2f}" r="{ir:.2f}" fill="white"/>')
+    parts.append('</svg>')
+    return ''.join(parts)
 
 # ── static config ─────────────────────────────────────────────────────────────
 
@@ -113,6 +194,12 @@ for company, dept, title, url in jobs_rows:
     if d not in jobs_by_company[company]:
         jobs_by_company[company][d] = []
     jobs_by_company[company][d].append((title, url))
+
+release_type_counts = {}
+for _co, _sm in releases_rows:
+    if _co not in release_type_counts:
+        release_type_counts[_co] = {'feature': 0, 'bugfix': 0, 'maintenance': 0}
+    release_type_counts[_co][classify_release(_sm)] += 1
 
 STOP_WORDS = {
     'the','a','an','and','is','to','of','in','for','with','that','this','are',
@@ -296,9 +383,9 @@ html = """<!DOCTYPE html>
         .paper-indicator { font-size: 0.68rem; color: #ccc; margin-top: 10px; text-align: center; }
 
         /* Flip card (right column) */
-        .flip-card-outer { background: white; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); transition: box-shadow 0.2s ease; perspective: 1100px; min-height: 260px; }
+        .flip-card-outer { background: white; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); transition: box-shadow 0.2s ease; perspective: 1100px; min-height: 370px; }
         .flip-card-outer:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.12); }
-        .flip-card-inner { position: relative; width: 100%; height: 100%; min-height: 260px; transform-style: preserve-3d; transition: transform 0.42s ease; }
+        .flip-card-inner { position: relative; width: 100%; height: 100%; min-height: 370px; transform-style: preserve-3d; transition: transform 0.42s ease; }
         .flip-card-inner.flipped { transform: rotateY(180deg); }
         .flip-front, .flip-back { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; padding: 16px 18px 14px; display: flex; flex-direction: column; gap: 10px; overflow: visible; }
         .flip-card-outer { overflow: visible; }
@@ -414,6 +501,16 @@ for company in ["PostHog", "Linear", "Zapier", "Replit"]:
     bsvg  = bubble_svg(kw, color)
     ssvg  = sparkline_svg(monthly, accent)
 
+    rtypes     = release_type_counts.get(company, {'feature': 0, 'bugfix': 0, 'maintenance': 0})
+    feat_color = accent
+    bug_color  = lighten_hex(accent, 0.45)
+    maint_color = '#cccccc'
+    psvg       = pie_chart_svg(rtypes, feat_color, bug_color, maint_color)
+    total_r    = sum(rtypes.values()) or 1
+    f_pct      = round(rtypes['feature']     / total_r * 100)
+    b_pct      = round(rtypes['bugfix']      / total_r * 100)
+    m_pct      = 100 - f_pct - b_pct
+
     # ── left: paper-stack card ──────────────────────────────────────────────
     html += f'<div class="company-row">\n'
     html += f'<div class="company-card section-{card_id}" onclick="event.stopPropagation()">\n'
@@ -490,6 +587,17 @@ for company in ["PostHog", "Linear", "Zapier", "Replit"]:
           {roles_html}
         </div>
         <div class="jobs-popover" id="jobs-popover-{card_id}">{popover_inner}</div>
+      </div>
+      <div>
+        <div class="sparkline-label">Release types</div>
+        <div style="display:flex;align-items:center;gap:10px;margin-top:4px;">
+          {psvg}
+          <div style="font-size:0.62rem;color:#888;line-height:1.9;">
+            <div><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:{feat_color};margin-right:5px;vertical-align:middle;"></span>Features <span style="color:#bbb;">({f_pct}%)</span></div>
+            <div><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:{bug_color};margin-right:5px;vertical-align:middle;"></span>Bug fixes <span style="color:#bbb;">({b_pct}%)</span></div>
+            <div><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:{maint_color};margin-right:5px;vertical-align:middle;"></span>Maintenance <span style="color:#bbb;">({m_pct}%)</span></div>
+          </div>
+        </div>
       </div>
       <div class="bubble-wrap">{bsvg}</div>
       <div class="sparkline-wrap">

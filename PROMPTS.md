@@ -197,3 +197,4 @@ Fixed 3 bugs in generate_html.py: (1) company tag pill spanning full card width,
 - Options: Simple (default), Middle English, Gen Z, 90s Slang
 - Each voice rewrites the same analogy in that style via the Anthropic API
 - Could be a small toggle or dropdown on each release card
+### 2026-05-30 — Add release-type pie chart (features/bug fixes/maintenance) to flip card front with inline SVG donut and color-coded legend
