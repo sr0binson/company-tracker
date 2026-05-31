@@ -230,3 +230,5 @@ Fixed 3 bugs in generate_html.py: (1) company tag pill spanning full card width,
 ### 2026-05-31 — Fixed Community Pulse dropdown clipping (overflow, z-index, flip card height expansion); increased Reddit to week+month feeds, PostHog questions to 50, Zapier to 4 categories
 
 ### 2026-05-31 — Generate Community Pulse summaries in all 5 voices at fetch time; voice selector now swaps Community Pulse text alongside post analogies
+
+### 2026-05-31 — Rebranded heading to 'The Nightly Rummager' (Oswald 700 uppercase) with italic Sora subtitle; voice selector now swaps subtitle only, title stays fixed
