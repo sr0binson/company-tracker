@@ -52,6 +52,24 @@ try:
 except Exception:
     hiring_data = []
 
+try:
+    hiring_deltas = cursor.execute("""
+        SELECT company, snapshot_date, open_roles, delta, note
+        FROM hiring_deltas
+        ORDER BY snapshot_date DESC, company
+    """).fetchall()
+except Exception:
+    hiring_deltas = []
+
+try:
+    latest_summary = cursor.execute("""
+        SELECT summary_date, summary FROM hiring_summaries
+        ORDER BY summary_date DESC
+        LIMIT 1
+    """).fetchone()
+except Exception:
+    latest_summary = None
+
 conn.close()
 
 # ── helpers ──────────────────────────────────────────────────────────────────
@@ -463,13 +481,26 @@ html = """<!DOCTYPE html>
         #zap-cursor { position: fixed; pointer-events: none; z-index: 99999; transform: translate(-50%,-50%); display: none; }
 
         /* Hiring Trends */
-        .hiring-trends-wrap { max-width: 1100px; margin: 40px auto 60px; padding: 0 20px; font-family: 'Sora', sans-serif; }
+        .hiring-trends-wrap { max-width: 1100px; margin: 40px auto 0; padding: 0 20px; font-family: 'Sora', sans-serif; }
         .hiring-trends-heading { font-size: 1.1rem; font-weight: 600; color: #333; margin-bottom: 14px; }
         .hiring-trends-table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
         .hiring-trends-table th { text-align: left; padding: 8px 12px; background: #f5f5f5; color: #666; font-weight: 600; border-bottom: 2px solid #e0e0e0; }
         .hiring-trends-table td { padding: 7px 12px; border-bottom: 1px solid #f0f0f0; color: #444; }
         .hiring-trends-table .ht-date { color: #999; font-size: 0.72rem; white-space: nowrap; }
         .hiring-trends-table tbody tr:hover { background: #fafafa; }
+        /* Delta cards */
+        .delta-cards-wrap { max-width: 1100px; margin: 28px auto 0; padding: 0 20px; font-family: 'Sora', sans-serif; display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+        .delta-card { background: white; border-radius: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); padding: 16px 18px; border-top: 3px solid #ddd; }
+        .delta-count { font-size: 2rem; font-weight: 700; line-height: 1; }
+        .delta-company { font-size: 0.7rem; font-weight: 600; color: #aaa; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px; }
+        .delta-note { font-size: 0.7rem; font-style: italic; color: #bbb; margin-top: 6px; line-height: 1.4; }
+        /* Weekly summary */
+        .hiring-summary-wrap { max-width: 1100px; margin: 24px auto 60px; padding: 0 20px; font-family: 'Sora', sans-serif; }
+        .hiring-summary-card { background: white; border-radius: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); padding: 20px 24px; display: flex; flex-direction: column; gap: 10px; }
+        .hiring-summary-header { display: flex; justify-content: space-between; align-items: baseline; }
+        .hiring-summary-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: #aaa; }
+        .hiring-summary-date { font-size: 0.7rem; color: #ccc; }
+        .hiring-summary-text { font-size: 0.85rem; color: #444; line-height: 1.65; }
 
         @media (max-width: 600px) {
             .heading { font-size: 1.8rem; margin-top: 1.5rem; margin-bottom: 1.5rem; }
@@ -694,6 +725,45 @@ if hiring_data:
   </table>
 </div>
 """
+
+# ── Delta cards ───────────────────────────────────────────────────────────────
+if hiring_deltas:
+    companies_order = ["PostHog", "Linear", "Zapier", "Replit"]
+    # Most recent delta per company
+    latest_delta = {}
+    for company, snap_date, open_roles, delta, note in hiring_deltas:
+        if company not in latest_delta:
+            latest_delta[company] = (open_roles, note)
+
+    cards_html = ''
+    for c in companies_order:
+        color = company_colors.get(c, '#e0e0e0')
+        accent = company_accent.get(c, '#888')
+        if c in latest_delta:
+            count, note = latest_delta[c]
+            cards_html += f"""<div class="delta-card" style="border-top-color:{color};">
+  <div class="delta-count" style="color:{accent};">{count}</div>
+  <div class="delta-company">{html_escape(c)}</div>
+  <div class="delta-note">{html_escape(note)}</div>
+</div>
+"""
+    html += f'<div class="delta-cards-wrap">{cards_html}</div>\n'
+
+# ── Weekly summary ────────────────────────────────────────────────────────────
+if latest_summary:
+    summary_date, summary_text = latest_summary
+    html += f"""<div class="hiring-summary-wrap">
+  <div class="hiring-summary-card">
+    <div class="hiring-summary-header">
+      <span class="hiring-summary-label">Weekly Analysis</span>
+      <span class="hiring-summary-date">{html_escape(summary_date)}</span>
+    </div>
+    <div class="hiring-summary-text">{html_escape(summary_text)}</div>
+  </div>
+</div>
+"""
+elif hiring_deltas:
+    html += '<div style="height:60px;"></div>\n'
 
 # ── JS ────────────────────────────────────────────────────────────────────────
 

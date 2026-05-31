@@ -82,6 +82,27 @@ cursor.execute("""
 """)
 
 cursor.execute("""
+    CREATE TABLE IF NOT EXISTS hiring_deltas (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        company TEXT,
+        snapshot_date TEXT,
+        open_roles INTEGER,
+        delta INTEGER,
+        note TEXT,
+        UNIQUE(company, snapshot_date)
+    )
+""")
+
+cursor.execute("""
+    CREATE TABLE IF NOT EXISTS hiring_summaries (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        summary_date TEXT,
+        summary TEXT,
+        UNIQUE(summary_date)
+    )
+""")
+
+cursor.execute("""
     CREATE TABLE IF NOT EXISTS blog_posts (
         id TEXT PRIMARY KEY,
         company TEXT,
@@ -450,6 +471,106 @@ for _company, _title, _dept, _loc in _snap_rows:
     """, (_company, _job_id, _title, _dept or "", _loc or "", "", _today))
 conn.commit()
 print(f"Job snapshots recorded for {_today}: {len(_snap_rows)} rows.")
+
+def calculate_hiring_deltas(cursor, today):
+    companies = ["PostHog", "Linear", "Zapier", "Replit"]
+    for company in companies:
+        today_count = cursor.execute("""
+            SELECT COUNT(*) FROM job_snapshots
+            WHERE company = ? AND snapshot_date = ?
+        """, (company, today)).fetchone()[0]
+
+        prev = cursor.execute("""
+            SELECT snapshot_date, COUNT(*) as cnt FROM job_snapshots
+            WHERE company = ? AND snapshot_date < ?
+            GROUP BY snapshot_date
+            ORDER BY snapshot_date DESC
+            LIMIT 1
+        """, (company, today)).fetchone()
+
+        if prev:
+            delta = today_count - prev[1]
+            if delta > 0:
+                note = f"+{delta} roles since {prev[0]}"
+            elif delta < 0:
+                note = f"{delta} roles since {prev[0]}"
+            else:
+                note = f"No change since {prev[0]}"
+        else:
+            delta = 0
+            note = "First snapshot"
+
+        cursor.execute("""
+            INSERT OR IGNORE INTO hiring_deltas (company, snapshot_date, open_roles, delta, note)
+            VALUES (?, ?, ?, ?, ?)
+        """, (company, today, today_count, delta, note))
+
+def generate_weekly_hiring_summary(cursor, today):
+    from datetime import timedelta
+    if date_cls.fromisoformat(today).weekday() != 0:
+        return
+
+    existing = cursor.execute("""
+        SELECT id FROM hiring_summaries WHERE summary_date = ?
+    """, (today,)).fetchone()
+    if existing:
+        return
+
+    week_ago = (date_cls.fromisoformat(today) - timedelta(days=7)).isoformat()
+    deltas = cursor.execute("""
+        SELECT company, snapshot_date, open_roles, delta, note
+        FROM hiring_deltas
+        WHERE snapshot_date >= ?
+        ORDER BY company, snapshot_date
+    """, (week_ago,)).fetchall()
+
+    if not deltas:
+        return
+
+    data_text = "\n".join([
+        f"{company} on {snap_date}: {open_roles} open roles ({note})"
+        for company, snap_date, open_roles, delta, note in deltas
+    ])
+
+    prompt = f"""Here is hiring data for 4 tech companies over the past week:
+
+{data_text}
+
+Write a 3-4 sentence plain English summary of what this hiring data suggests about each company. \
+Be specific about numbers. Note any interesting patterns or signals. \
+Do not use buzzwords or hype. Be direct and factual.
+Do not use em dashes."""
+
+    try:
+        api_key = os.environ.get("ANTHROPIC_API_KEY")
+        req = urllib.request.Request(
+            "https://api.anthropic.com/v1/messages",
+            data=json.dumps({
+                "model": "claude-haiku-4-5",
+                "max_tokens": 300,
+                "messages": [{"role": "user", "content": prompt}]
+            }).encode(),
+            headers={
+                "Content-Type": "application/json",
+                "x-api-key": api_key,
+                "anthropic-version": "2023-06-01"
+            },
+            method="POST"
+        )
+        resp = urllib.request.urlopen(req, timeout=15)
+        data = json.loads(resp.read())
+        summary = data["content"][0]["text"]
+        cursor.execute("""
+            INSERT OR IGNORE INTO hiring_summaries (summary_date, summary)
+            VALUES (?, ?)
+        """, (today, summary))
+        print(f"Weekly hiring summary generated for {today}")
+    except Exception as e:
+        print(f"Error generating hiring summary: {e}")
+
+calculate_hiring_deltas(cursor, _today)
+generate_weekly_hiring_summary(cursor, _today)
+conn.commit()
 
 print("\nVerification — first 3 PostHog job URLs:")
 for row in cursor.execute(
