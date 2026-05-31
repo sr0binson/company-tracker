@@ -238,11 +238,38 @@ def _str_field(val):
         return (val.get("name") or val.get("title") or "").strip()
     return str(val).strip()
 
+def _title_to_slug(title):
+    """Normalise a job title to a URL slug for matching against posthog.com/careers/slug."""
+    s = title.lower()
+    s = re.sub(r'[—–]+', '-', s)        # em/en-dash → hyphen
+    s = re.sub(r'[^a-z0-9]+', '-', s)   # everything else non-alphanumeric → hyphen
+    s = re.sub(r'-+', '-', s)            # collapse runs
+    return s.strip('-')
+
+def _fetch_posthog_sitemap_urls():
+    """Return a dict of {slug: full_url} from posthog.com/sitemap/sitemap-0.xml."""
+    sitemap_url = "https://posthog.com/sitemap/sitemap-0.xml"
+    req = urllib.request.Request(sitemap_url, headers={"User-Agent": "Mozilla/5.0"})
+    with urllib.request.urlopen(req, timeout=15) as resp:
+        xml = resp.read().decode("utf-8", errors="replace")
+    urls = re.findall(r'<loc>(https://posthog\.com/careers/[^<]+)</loc>', xml)
+    return {u.split("/careers/")[1]: u for u in urls}
+
 def fetch_jobs():
     cursor.execute("DELETE FROM jobs")
     conn.commit()
     print("Jobs table cleared.")
     today = date_cls.today().isoformat()
+
+    # Pre-fetch PostHog sitemap slug → URL map so we can use canonical career page URLs
+    print("Fetching PostHog careers sitemap...")
+    try:
+        posthog_slug_map = _fetch_posthog_sitemap_urls()
+        print(f"  Found {len(posthog_slug_map)} PostHog career URLs in sitemap.")
+    except Exception as e:
+        print(f"  Could not fetch PostHog sitemap ({e}), will fall back to Ashby URLs.")
+        posthog_slug_map = {}
+
     for company, slug in ASHBY_SLUGS.items():
         print(f"Fetching jobs for {company}...")
         url = f"https://api.ashbyhq.com/posting-api/job-board/{slug}"
@@ -267,8 +294,10 @@ def fetch_jobs():
                     _str_field(job.get("primaryLocation"))
                 )
                 if company == "PostHog":
-                    job_id = job.get("id", "")
-                    job_url = f"https://posthog.com/careers#{job_id}" if job_id else ""
+                    # Match Ashby title → posthog.com/careers/slug via sitemap
+                    title_slug = _title_to_slug(title)
+                    job_url = posthog_slug_map.get(title_slug,
+                              f"https://posthog.com/careers#{job.get('id', '')}")
                 else:
                     job_url = (
                         job.get("jobUrl") or job.get("hostedUrl") or
