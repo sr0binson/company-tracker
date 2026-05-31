@@ -1063,6 +1063,9 @@ html += """
             }
         }
     </script>
+    <footer style="text-align:center;padding:60px 20px 40px;font-family:'Sora',sans-serif;font-size:0.72rem;color:#ccc;line-height:1.6;">
+        Built by a quirky, clumsy little creature foraging at odd hours. Not affiliated with PostHog, Zapier, Replit, or Linear&hellip; yet.
+    </footer>
 </body>
 </html>
 """
