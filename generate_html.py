@@ -70,6 +70,16 @@ try:
 except Exception:
     latest_summary = None
 
+try:
+    ticker_posts = cursor.execute("""
+        SELECT company, title, link
+        FROM blog_posts
+        ORDER BY updated DESC
+        LIMIT 20
+    """).fetchall()
+except Exception:
+    ticker_posts = []
+
 conn.close()
 
 # ── helpers ──────────────────────────────────────────────────────────────────
@@ -364,7 +374,7 @@ html = """<!DOCTYPE html>
     <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;700&family=Oswald:ital,wght@1,700&display=swap" rel="stylesheet">
     <style>
         * { box-sizing: border-box; }
-        body { font-family: 'Sora', sans-serif; max-width: 1100px; margin: 0 auto; padding: 280px 20px 100vh; background: #f9f9f9; }
+        body { font-family: 'Sora', sans-serif; max-width: 1100px; margin: 0 auto; padding: 316px 20px 100vh; background: #f9f9f9; }
         .sticky-header { position: fixed; top: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 1100px; z-index: 100; background: #f9f9f9; padding: 20px 20px 16px; border-bottom: 1px solid #e8e8e8; }
         .header-logo { position: absolute; top: 12px; right: 20px; height: 70px; width: auto; pointer-events: none; mix-blend-mode: multiply; }
         .voice-label { font-size: 0.68rem; color: #bbb; font-family: 'Sora', sans-serif; font-weight: 300; margin: 0 0 7px 0; letter-spacing: 0.3px; }
@@ -502,7 +512,21 @@ html = """<!DOCTYPE html>
         .hiring-summary-date { font-size: 0.7rem; color: #ccc; }
         .hiring-summary-text { font-size: 0.85rem; color: #444; line-height: 1.65; }
 
+        /* News ticker */
+        .ticker-wrap { position: fixed; top: 0; left: 0; width: 100%; background: #0a0a0a; border-bottom: 1px solid #1a1a1a; padding: 8px 0; z-index: 9999; overflow: hidden; font-family: 'Courier New', monospace; }
+        .ticker-track { display: flex; width: max-content; animation: ticker-scroll 60s linear infinite; }
+        .ticker-track:hover { animation-play-state: paused; }
+        .ticker-item { display: flex; align-items: center; gap: 8px; padding: 0 32px; white-space: nowrap; font-size: 0.75rem; color: #666; }
+        .ticker-item a { color: #aaa; text-decoration: none; letter-spacing: 0.5px; }
+        .ticker-item a:hover { color: #fff; }
+        .ticker-company { font-size: 0.65rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; padding: 2px 6px; border-radius: 3px; }
+        .ticker-dot { color: #333; font-size: 0.6rem; }
+        .ticker-label { color: #2a2a2a; font-size: 0.65rem; letter-spacing: 3px; text-transform: uppercase; padding: 0 16px 0 0; border-right: 1px solid #222; margin-right: 16px; }
+        @keyframes ticker-scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+
         @media (max-width: 600px) {
+            .ticker-wrap { padding: 6px 0; }
+            .ticker-item { font-size: 0.7rem; padding: 0 20px; }
             .heading { font-size: 1.8rem; margin-top: 1.5rem; margin-bottom: 1.5rem; }
             .heading .line1 { padding-left: 0; text-align: center; }
             .company-row { grid-template-columns: 1fr; }
@@ -523,7 +547,7 @@ html = """<!DOCTYPE html>
 </script>
 </head>
 <body>
-
+{ticker_placeholder}
     <!-- Cursor elements -->
     <img id="hh-cursor" src="hedgehog.png" />
     <svg id="linear-cursor" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 26 26"><circle cx="13" cy="13" r="11" fill="#8B94E0"/></svg>
@@ -556,6 +580,31 @@ html = """<!DOCTYPE html>
 
     <div style="overflow-x: hidden;">
 """
+
+# ── News ticker ───────────────────────────────────────────────────────────────
+company_glow = {
+    "PostHog": {"color": "#E8E0D0"},
+    "Zapier":  {"color": "#FF7A3D"},
+    "Replit":  {"color": "#AAAAAA"},
+    "Linear":  {"color": "#8B94E0"},
+}
+ticker_items = ""
+for _tc, _tt, _tl in ticker_posts:
+    _col = company_glow.get(_tc, {}).get("color", "#fff")
+    ticker_items += (
+        f'<div class="ticker-item">'
+        f'<span class="ticker-company" style="color:{_col};text-shadow:0 0 8px {_col};border:1px solid {_col}33;">{html_escape(_tc)}</span>'
+        f'<a href="{html_escape(_tl)}" target="_blank">{html_escape(_tt)}</a>'
+        f'<span class="ticker-dot">&#9670;</span>'
+        f'</div>'
+    )
+_ticker_html = (
+    '<div class="ticker-wrap"><div class="ticker-track">'
+    '<span class="ticker-label">// LIVE</span>'
+    + ticker_items + ticker_items +
+    '</div></div>'
+) if ticker_items else ""
+html = html.replace("{ticker_placeholder}", _ticker_html)
 
 # ── per-company rows ───────────────────────────────────────────────────────────
 
