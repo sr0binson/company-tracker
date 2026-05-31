@@ -297,27 +297,38 @@ def _strip_html(text):
     return re.sub(r'\s+', ' ', text).strip()
 
 def fetch_reddit_posts(subreddit):
-    """Top posts from a subreddit via the public Atom RSS feed (no auth required)."""
-    url = f"https://www.reddit.com/r/{subreddit}/top.rss?t=week&limit=25"
-    req = urllib.request.Request(url, headers=_REDDIT_RSS_HEADERS)
-    with urllib.request.urlopen(req, timeout=15) as resp:
-        raw = resp.read()
-    root = ET.fromstring(raw.decode("utf-8", errors="replace"))
+    """Top posts from a subreddit via the public Atom RSS feed (no auth required).
+    Fetches both week-top and month-top to get up to ~50 unique posts for small subreddits."""
+    seen  = set()
     posts = []
-    for entry in root.findall("atom:entry", _NS_ATOM):
-        title_el   = entry.find("atom:title",   _NS_ATOM)
-        content_el = entry.find("atom:content", _NS_ATOM)
-        link_el    = entry.find("atom:link",    _NS_ATOM)
-        title = sanitize_input((title_el.text or "").strip()) if title_el is not None else ""
-        body  = _strip_html(content_el.text or "")           if content_el is not None else ""
-        link  = link_el.get("href", "")                      if link_el is not None else ""
-        if title:
-            posts.append({"title": title, "body": sanitize_input(body[:400]), "url": link})
+    feeds = [
+        f"https://www.reddit.com/r/{subreddit}/top.rss?t=week&limit=50",
+        f"https://www.reddit.com/r/{subreddit}/top.rss?t=month&limit=50",
+    ]
+    for url in feeds:
+        try:
+            req = urllib.request.Request(url, headers=_REDDIT_RSS_HEADERS)
+            with urllib.request.urlopen(req, timeout=15) as resp:
+                raw = resp.read()
+            root = ET.fromstring(raw.decode("utf-8", errors="replace"))
+            for entry in root.findall("atom:entry", _NS_ATOM):
+                title_el   = entry.find("atom:title",   _NS_ATOM)
+                content_el = entry.find("atom:content", _NS_ATOM)
+                link_el    = entry.find("atom:link",    _NS_ATOM)
+                title = sanitize_input((title_el.text or "").strip()) if title_el is not None else ""
+                body  = _strip_html(content_el.text or "")            if content_el is not None else ""
+                link  = link_el.get("href", "")                       if link_el is not None else ""
+                if title and title not in seen:
+                    seen.add(title)
+                    posts.append({"title": title, "body": sanitize_input(body[:400]), "url": link})
+            time.sleep(1)
+        except Exception as e:
+            print(f"    Reddit RSS error ({url}): {e}")
     return posts
 
 _POSTHOG_STRAPI = "https://better-animal-d658c56969.strapiapp.com/api"
 
-def fetch_posthog_questions(limit=20):
+def fetch_posthog_questions(limit=50):
     """Recent questions from posthog.com/questions via their public Strapi API."""
     url = (f"{_POSTHOG_STRAPI}/questions"
            f"?fields[0]=subject&fields[1]=permalink&fields[2]=activeAt"
@@ -337,9 +348,11 @@ def fetch_posthog_questions(limit=20):
 _ZAPIER_COMMUNITY_CATS = [
     "https://community.zapier.com/get-help-50",
     "https://community.zapier.com/troubleshooting-99",
+    "https://community.zapier.com/how-do-i-3",
+    "https://community.zapier.com/general-discussion-13",
 ]
 
-def fetch_zapier_community(limit=20):
+def fetch_zapier_community(limit=50):
     """Recent posts from community.zapier.com via HTML scraping (entity-encoded JSON)."""
     posts = []
     seen  = set()
@@ -443,7 +456,7 @@ def fetch_reddit_sentiment():
         # PostHog questions (PostHog only)
         if company == "PostHog":
             try:
-                ph_posts = fetch_posthog_questions()
+                ph_posts = fetch_posthog_questions(limit=50)
                 print(f"  posthog.com/questions: {len(ph_posts)} posts")
                 if ph_posts:
                     sources.append({"name": "posthog.com/questions",
@@ -456,7 +469,7 @@ def fetch_reddit_sentiment():
         # Zapier community (Zapier only)
         elif company == "Zapier":
             try:
-                zap_posts = fetch_zapier_community()
+                zap_posts = fetch_zapier_community(limit=50)
                 print(f"  community.zapier.com: {len(zap_posts)} posts")
                 if zap_posts:
                     sources.append({"name": "community.zapier.com",

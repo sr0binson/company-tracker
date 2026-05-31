@@ -442,11 +442,11 @@ html = """<!DOCTYPE html>
         /* Flip card (right column) */
         .flip-card-outer { background: white; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); transition: box-shadow 0.2s ease; perspective: 1100px; min-height: 370px; }
         .flip-card-outer:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.12); }
-        .flip-card-inner { position: relative; width: 100%; height: 100%; min-height: 370px; transform-style: preserve-3d; transition: transform 0.42s ease; }
+        .flip-card-inner { position: relative; width: 100%; height: 100%; min-height: 370px; transform-style: preserve-3d; transition: transform 0.42s ease; overflow: visible; }
         .flip-card-inner.flipped { transform: rotateY(180deg); }
-        .flip-front, .flip-back { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; padding: 16px 18px 14px; display: flex; flex-direction: column; gap: 10px; overflow: visible; }
-        .flip-card-outer { overflow: visible; }
-        .flip-back { transform: rotateY(180deg); }
+        .flip-front { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; padding: 16px 18px 14px; display: flex; flex-direction: column; gap: 10px; overflow: visible; }
+        .flip-back { position: absolute; top: 0; left: 0; right: 0; min-height: 100%; backface-visibility: hidden; -webkit-backface-visibility: hidden; padding: 16px 18px 14px; display: flex; flex-direction: column; gap: 10px; overflow: visible; transform: rotateY(180deg); }
+        .flip-card-outer { overflow: visible; position: relative; }
         .flip-icon { position: absolute; top: 8px; right: 10px; background: none; border: none; font-size: 1.05rem; color: #ccc; cursor: pointer !important; padding: 4px 6px; border-radius: 4px; line-height: 1; transition: color 0.15s; z-index: 10; }
         .flip-icon:hover { color: #888; }
 
@@ -609,7 +609,7 @@ html = """<!DOCTYPE html>
         </div>
     </div>
 
-    <div style="overflow-x: hidden; margin-top: 120px;">
+    <div style="overflow: visible; margin-top: 120px;">
 """
 
 # ── News ticker ───────────────────────────────────────────────────────────────
@@ -1114,6 +1114,22 @@ html += """
                 icon.textContent = '▼ show';
             }
         }
+
+        // Expand flip card height + lift z-index when Community Pulse titles dropdown opens
+        document.querySelectorAll('.pulse-details').forEach(function(det) {
+            det.addEventListener('toggle', function() {
+                var outer = det.closest('.flip-card-outer');
+                var back  = det.closest('.flip-back');
+                if (!outer || !back) return;
+                if (det.open) {
+                    outer.style.minHeight = (back.scrollHeight + 8) + 'px';
+                    outer.style.zIndex    = '50';
+                } else {
+                    outer.style.minHeight = '';
+                    outer.style.zIndex    = '';
+                }
+            });
+        });
     </script>
     <footer style="text-align:center;padding:60px 20px 40px;font-family:'Sora',sans-serif;font-size:0.72rem;color:#ccc;line-height:1.6;">
         Built by a quirky, clumsy little creature foraging at odd hours. Not affiliated with PostHog, Zapier, Replit, or Linear&hellip; yet.
