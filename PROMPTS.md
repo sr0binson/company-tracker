@@ -193,6 +193,12 @@ Fixed 3 bugs in generate_html.py: (1) company tag pill spanning full card width,
 ### 2026-05-30 — Add release-type pie chart (features/bug fixes/maintenance) to flip card front with inline SVG donut and color-coded legend
 ### 2026-05-30 — Added pie charts showing release type breakdown (features/bugfixes/maintenance) per company using brand colors; fixed PostHog job links via sitemap scrape; fixed jobs popover showing for all 4 companies; fixed sparkline, company tag pill, competitor links
 
+### 2026-05-30 — Fix card clipping under fixed header: grid wrapper margin-top 120px, heading margin-bottom tightened
+### 2026-05-30 — Fix header and logo position below ticker: body padding, sticky-header top, heading margin-top
+### 2026-05-30 — Fix ticker overlap with header by increasing body padding-top and adding h1 margin-top
+### 2026-05-30 — Add fixed hacker-style news ticker at top of page scrolling latest 20 blog posts
+### 2026-05-30 — Make hiring trends table collapsible with toggle button, hidden by default
+### 2026-05-30 — Add hiring_deltas and hiring_summaries tables, delta calculation, weekly AI summary, delta cards and summary card in HTML
 ### 2026-05-30 — Add mobile responsive CSS block and overflow-x hidden on company grid
 ### 2026-05-30 — Add hiring data tracking: job_snapshots table, daily snapshot from jobs table, Hiring Trends table in HTML
 ### 2026-05-30 — Add PostHog analytics snippet to index.html (autocapture, pageview, pageleave)
