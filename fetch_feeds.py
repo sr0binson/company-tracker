@@ -4,6 +4,7 @@ import sqlite3
 import json
 import os
 import re
+import time
 from datetime import date as date_cls
 from email.utils import parsedate_to_datetime
 from dotenv import load_dotenv
@@ -116,6 +117,16 @@ cursor.execute("""
         analogy_medieval TEXT,
         analogy_aifluff TEXT,
         analogy_plain TEXT
+    )
+""")
+
+cursor.execute("""
+    CREATE TABLE IF NOT EXISTS reddit_sentiment (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        company TEXT,
+        summary TEXT,
+        fetched_date TEXT,
+        UNIQUE(company, fetched_date)
     )
 """)
 
@@ -256,6 +267,116 @@ if _voice_backfill:
               _voices["analogy_medieval"], _voices["analogy_aifluff"], _voices["analogy_plain"], _row_id))
     conn.commit()
     print("Voice backfill complete.")
+
+REDDIT_SUBREDDITS = {
+    "PostHog": "posthog",
+    "Zapier": "zapier",
+    "Replit": "replit",
+    "Linear": "linear",
+}
+
+_REDDIT_RSS_HEADERS = {
+    "User-Agent": "Mozilla/5.0 (compatible; RSS reader)",
+    "Accept": "application/rss+xml, application/xml, text/xml",
+}
+_NS_ATOM = {"atom": "http://www.w3.org/2005/Atom"}
+
+def _strip_html(text):
+    """Remove HTML tags and decode common entities."""
+    text = re.sub(r'<[^>]+>', ' ', text)
+    text = text.replace('&amp;', '&').replace('&lt;', '<').replace('&gt;', '>').replace('&quot;', '"').replace('&#39;', "'").replace('&nbsp;', ' ')
+    return re.sub(r'\s+', ' ', text).strip()
+
+def fetch_reddit_posts(subreddit):
+    """Fetch top posts from a subreddit via the public Atom RSS feed."""
+    url = f"https://www.reddit.com/r/{subreddit}/top.rss?t=week&limit=25"
+    req = urllib.request.Request(url, headers=_REDDIT_RSS_HEADERS)
+    with urllib.request.urlopen(req, timeout=15) as resp:
+        raw = resp.read()
+    root = ET.fromstring(raw.decode("utf-8", errors="replace"))
+    posts = []
+    for entry in root.findall("atom:entry", _NS_ATOM):
+        title_el  = entry.find("atom:title", _NS_ATOM)
+        content_el = entry.find("atom:content", _NS_ATOM)
+        link_el   = entry.find("atom:link", _NS_ATOM)
+        title = sanitize_input((title_el.text or "").strip()) if title_el is not None else ""
+        body  = _strip_html(content_el.text or "") if content_el is not None else ""
+        link  = link_el.get("href", "") if link_el is not None else ""
+        if title:
+            posts.append({
+                "title":   title,
+                "selftext": sanitize_input(body[:500]),
+                "link":    link,
+            })
+    return posts
+
+def get_reddit_sentiment_summary(company, posts):
+    if not ANTHROPIC_API_KEY:
+        return "Sentiment summary unavailable."
+
+    lines = []
+    for post in posts:
+        lines.append(f"Title: {post['title']}")
+        if post["selftext"]:
+            lines.append(f"  Body: {post['selftext'][:400]}")
+
+    content = "\n".join(lines)[:3500]
+
+    prompt = f"""These are the top Reddit posts from r/{company.lower()} this week:
+
+{content}
+
+Write 3-4 sentences summarizing community sentiment about {company}. Cover what users love, what frustrates them, any bugs or pain points, and overall tone. Be specific and direct. No headers, no bullet points, no markdown, no em dashes."""
+
+    data = json.dumps({
+        "model": "claude-haiku-4-5",
+        "max_tokens": 250,
+        "messages": [{"role": "user", "content": prompt}]
+    }).encode("utf-8")
+
+    req = urllib.request.Request(
+        "https://api.anthropic.com/v1/messages",
+        data=data,
+        headers={
+            "Content-Type": "application/json",
+            "x-api-key": ANTHROPIC_API_KEY,
+            "anthropic-version": "2023-06-01"
+        }
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=20) as response:
+            result = json.loads(response.read())
+            return result["content"][0]["text"].strip()
+    except Exception as e:
+        print(f"  Reddit sentiment AI error: {e}")
+        return "Sentiment summary unavailable."
+
+def fetch_reddit_sentiment():
+    today = date_cls.today().isoformat()
+    for company, subreddit in REDDIT_SUBREDDITS.items():
+        existing = cursor.execute(
+            "SELECT id FROM reddit_sentiment WHERE company = ? AND fetched_date = ?",
+            (company, today)
+        ).fetchone()
+        if existing:
+            print(f"  {company}: Reddit sentiment already fetched today, skipping.")
+            continue
+
+        print(f"Fetching Reddit sentiment for {company} (r/{subreddit})...")
+        try:
+            posts = fetch_reddit_posts(subreddit)
+            print(f"  Got {len(posts)} posts.")
+            time.sleep(2)
+
+            summary = get_reddit_sentiment_summary(company, posts)
+            cursor.execute(
+                "INSERT OR IGNORE INTO reddit_sentiment (company, summary, fetched_date) VALUES (?, ?, ?)",
+                (company, summary, today)
+            )
+            conn.commit()
+            print(f"  {company}: Reddit sentiment stored.")
+        except Exception as e:
+            print(f"  Error fetching Reddit sentiment for {company}: {e}")
 
 ASHBY_SLUGS = {
     "PostHog": "posthog",
@@ -580,6 +701,7 @@ Do not use em dashes."""
 
 calculate_hiring_deltas(cursor, _today)
 generate_weekly_hiring_summary(cursor, _today)
+fetch_reddit_sentiment()
 
 conn.commit()
 

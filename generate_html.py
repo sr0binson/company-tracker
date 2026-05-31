@@ -80,6 +80,16 @@ try:
 except Exception:
     ticker_posts = []
 
+try:
+    reddit_rows = cursor.execute("""
+        SELECT company, summary FROM reddit_sentiment
+        WHERE fetched_date = (SELECT MAX(fetched_date) FROM reddit_sentiment WHERE company = reddit_sentiment.company)
+        GROUP BY company
+    """).fetchall()
+    reddit_sentiment_by_company = {company: summary for company, summary in reddit_rows}
+except Exception:
+    reddit_sentiment_by_company = {}
+
 conn.close()
 
 # ── helpers ──────────────────────────────────────────────────────────────────
@@ -512,6 +522,7 @@ html = """<!DOCTYPE html>
         .hiring-summary-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: #aaa; }
         .hiring-summary-date { font-size: 0.7rem; color: #ccc; }
         .hiring-summary-text { font-size: 0.85rem; color: #444; line-height: 1.65; }
+        .reddit-sentiment-text { font-size: 0.73rem; color: #555; line-height: 1.6; }
 
         /* News ticker */
         .ticker-wrap { position: fixed; top: 0; left: 0; width: 100%; background: #0a0a0a; border-bottom: 1px solid #1a1a1a; padding: 8px 0; z-index: 9999; overflow: hidden; font-family: 'Courier New', monospace; }
@@ -621,6 +632,7 @@ for company in ["PostHog", "Linear", "Zapier", "Replit"]:
 
     bsvg  = bubble_svg(kw, color)
     ssvg  = sparkline_svg(monthly, accent)
+    reddit_summary = reddit_sentiment_by_company.get(company, "")
 
     rtypes     = release_type_counts.get(company, {'feature': 0, 'bugfix': 0, 'maintenance': 0})
     feat_color = accent
@@ -737,6 +749,7 @@ for company in ["PostHog", "Linear", "Zapier", "Replit"]:
         <div class="back-header">Competes with</div>
         <div class="pill-row">{comp_pills}</div>
       </div>
+      {f'<div class="back-section"><div class="back-header">Community Pulse</div><div class="reddit-sentiment-text">{html_escape(reddit_summary)}</div></div>' if reddit_summary else ''}
     </div>
 
   </div>
