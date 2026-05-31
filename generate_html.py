@@ -408,6 +408,9 @@ html = """<!DOCTYPE html>
         .heading span { display: block; }
         .heading .line1 { font-family: 'Oswald', sans-serif; font-size: 3.6rem; font-weight: 700; color: #111; text-transform: uppercase; letter-spacing: 1.5px; }
         .heading .line2 { font-family: 'Sora', sans-serif; font-size: 1rem; font-weight: 300; font-style: italic; color: #bbb; margin-top: 5px; }
+        .subtitle-cursor { font-style: normal; font-weight: 300; color: #bbb; opacity: 0; margin-left: 1px; }
+        .subtitle-cursor.blinking { opacity: 1; animation: subtitle-blink 0.65s step-end infinite; }
+        @keyframes subtitle-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
 
         /* Row layout */
         .company-row { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px; align-items: stretch; }
@@ -604,7 +607,7 @@ html = """<!DOCTYPE html>
         <img src="SteezyR.png" class="header-logo" alt="">
         <div class="heading">
             <span class="line1" id="heading-line1">The Nightly Rummager</span>
-            <span class="line2" id="heading-line2">Coolest companies on earth, unearthed&hellip;</span>
+            <span class="line2" id="heading-line2"><span id="subtitle-static">Coolest companies on earth,&nbsp;</span><span id="subtitle-typewriter"></span><span class="subtitle-cursor" id="subtitle-cursor">|</span></span>
         </div>
         <p class="voice-label">Choose your own voice</p>
         <div class="voice-global">
@@ -616,7 +619,7 @@ html = """<!DOCTYPE html>
         </div>
     </div>
 
-    <div style="overflow: visible; margin-top: 120px;">
+    <div style="overflow: visible; margin-top: 90px;">
 """
 
 # ── News ticker ───────────────────────────────────────────────────────────────
@@ -1054,7 +1057,7 @@ html += """
             var v = voiceContent[voice];
             if (!v) return;
             document.getElementById('heading-line1').textContent = v.line1;
-            document.getElementById('heading-line2').textContent = v.line2;
+            document.getElementById('heading-line2').innerHTML = v.line2;
             document.querySelectorAll('.blog-label').forEach(function(el) { el.textContent = v.blog; });
             document.querySelectorAll('.coming-soon-label').forEach(function(el) { el.textContent = v.comingSoon; });
         }
@@ -1104,7 +1107,72 @@ html += """
                     loadPost(id, 0);
                 });
             }
+
+            // ── subtitle typewriter + dirt burst ─────────────────────────────
+            var tw     = document.getElementById('subtitle-typewriter');
+            var cursor = document.getElementById('subtitle-cursor');
+            if (tw && cursor) {
+                var typed = 'unearthed…';
+                cursor.classList.add('blinking');
+                setTimeout(function() {
+                    var i = 0;
+                    var iv = setInterval(function() {
+                        tw.textContent += typed[i];
+                        i++;
+                        if (i >= typed.length) {
+                            clearInterval(iv);
+                            setTimeout(function() {
+                                cursor.classList.remove('blinking');
+                                cursor.style.opacity = '0';
+                                triggerDirtBurst(tw);
+                            }, 480);
+                        }
+                    }, 78);
+                }, 700);
+            }
         });
+
+        function triggerDirtBurst(el) {
+            var rect = el.getBoundingClientRect();
+            var ox = rect.left + rect.width * 0.6;
+            var oy = rect.top  + rect.height * 0.5;
+            var colors = ['#6B4226','#8B6914','#A0522D','#C19A6B','#5C3D1E','#D2B48C','#7B5B3A','#4A3728'];
+            var count = 7;
+            for (var i = 0; i < count; i++) {
+                (function(idx) {
+                    var dot  = document.createElement('div');
+                    var size = 3 + Math.random() * 4;
+                    // spread mostly upward: -150deg to -30deg in screen coords
+                    var angleDeg = -150 + Math.random() * 120;
+                    var rad  = angleDeg * Math.PI / 180;
+                    var dist = 18 + Math.random() * 28;
+                    var dx   = Math.cos(rad) * dist;
+                    var dy   = Math.sin(rad) * dist;
+                    var dur  = 480 + Math.random() * 260;
+                    var delay = idx * 28;
+                    var color = colors[Math.floor(Math.random() * colors.length)];
+                    dot.style.cssText = [
+                        'position:fixed','pointer-events:none','z-index:99999',
+                        'border-radius:50%',
+                        'width:' + size.toFixed(1) + 'px',
+                        'height:' + size.toFixed(1) + 'px',
+                        'background:' + color,
+                        'left:' + ox + 'px','top:' + oy + 'px',
+                        'opacity:1',
+                        'transform:translate(0,0)',
+                        'transition:transform ' + dur + 'ms ease-out ' + delay + 'ms, opacity ' + dur + 'ms ease-out ' + delay + 'ms'
+                    ].join(';');
+                    document.body.appendChild(dot);
+                    requestAnimationFrame(function() {
+                        requestAnimationFrame(function() {
+                            dot.style.transform = 'translate(' + dx.toFixed(1) + 'px,' + dy.toFixed(1) + 'px)';
+                            dot.style.opacity   = '0';
+                        });
+                    });
+                    setTimeout(function() { dot.parentNode && dot.parentNode.removeChild(dot); }, dur + delay + 100);
+                })(i);
+            }
+        }
 
         // ── flip cards ───────────────────────────────────────────────────────
         var FLIP_MIN_H = 370;
