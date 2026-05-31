@@ -214,6 +214,13 @@ Fixed 3 bugs in generate_html.py: (1) company tag pill spanning full card width,
 - Each voice rewrites the same analogy in that style via the Anthropic API
 - Could be a small toggle or dropdown on each release card
 
+**Custom Voice Input:**
+- User types any freeform voice prompt, e.g. "act like a toddler with a PhD"
+- On submit, live Haiku API call rewrites all visible analogies and Community Pulse summaries in that voice
+- Daily cap of 10 uses per visitor; when cap is hit, show a fun message that fits the quirky creature vibe of the footer (e.g. "this little creature has foraged its last thought for today, come back tomorrow")
+- Requires a Cloudflare Worker (free tier) to: (1) track a daily usage counter keyed by IP or fingerprint, (2) proxy the Anthropic API call so the key never touches the client
+- Worker returns the rewritten text or a cap-exceeded response; front end handles both cases inline without a page reload
+
 ### 2026-05-31 — Added Reddit sentiment fetching via public RSS feeds and Community Pulse display on flip card back faces
 
 ### 2026-05-31 — Added footer with creature tagline and non-affiliation disclaimer
