@@ -67,8 +67,10 @@
 
         /* Roles */
         .roles-wrap { position: relative; }
-        .roles-count { font-size: 0.78rem; font-weight: 600; color: #bbb; cursor: pointer !important; user-select: none; line-height: 1.3; }
-        .roles-count:hover { color: #999; }
+        .roles-count { font-size: 0.78rem; font-weight: 600; color: #bbb; cursor: pointer !important; user-select: none; line-height: 1.3; transition: opacity 0.15s; }
+        .roles-count:hover { opacity: 0.75; }
+        .roles-count:hover .roles-num,
+        .roles-count:hover .roles-text { text-decoration: underline; text-underline-offset: 2px; }
         .roles-num { font-size: 1.5rem; font-weight: 700; line-height: 1; }
         .roles-text { font-size: 0.82rem; font-weight: 600; }
 
