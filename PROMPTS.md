@@ -221,6 +221,20 @@ Fixed 3 bugs in generate_html.py: (1) company tag pill spanning full card width,
 - Requires a Cloudflare Worker (free tier) to: (1) track a daily usage counter keyed by IP or fingerprint, (2) proxy the Anthropic API call so the key never touches the client
 - Worker returns the rewritten text or a cap-exceeded response; front end handles both cases inline without a page reload
 
+**PostHog Session Recordings:**
+- Pull session recording metadata or highlights from PostHog's own API
+- Surface interesting sessions (rage clicks, errors, long sessions) as a data point
+
+**Zapier to Slack Digest:**
+- Daily automated digest of new Zapier community posts and top Reddit complaints sent to a Slack channel
+- Could use Zapier itself to build the automation
+
+**Linear for Project Management:**
+- Use Linear to track feature requests and bugs for this tracker itself
+- Tag issues by company (PostHog, Zapier, etc.) for roadmap visibility
+
+### 2026-05-31 — Session summary: Added Reddit/community sentiment pipeline (Atom RSS fallback after JSON 403), new reddit_sentiment table with 5-voice summaries and source metadata, PostHog Strapi API scraper (60 posts), Zapier HTML scraper (89 posts), Community Pulse flip card with sources + collapsible titles, syncFlipHeight() JS fix for flip card overflow, voice selector swaps Community Pulse, footer added, page rebranded to The Nightly Rummager with typewriter subtitle animation (dirt particles removed), company cards nudged closer to header
+
 ### 2026-05-31 — Added Reddit sentiment fetching via public RSS feeds and Community Pulse display on flip card back faces
 
 ### 2026-05-31 — Added footer with creature tagline and non-affiliation disclaimer
