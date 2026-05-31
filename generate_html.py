@@ -542,8 +542,8 @@ html = """<!DOCTYPE html>
             .heading { font-size: 1.8rem; margin-top: 1.5rem; margin-bottom: 1.5rem; }
             .heading .line1 { padding-left: 0; text-align: center; }
             .company-row { grid-template-columns: 1fr; }
-            .voice-buttons { display: flex; flex-wrap: wrap; gap: 8px; }
-            .voice-btn { flex: 1 1 calc(50% - 8px); min-width: 0; text-align: center; }
+            .voice-global { gap: 6px; }
+            .voice-pill { flex: 1 1 auto; text-align: center; min-width: 0; }
             body { margin: 20px auto; }
             .popover { width: calc(100vw - 40px) !important; left: 20px !important; }
         }

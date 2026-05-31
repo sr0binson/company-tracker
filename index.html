@@ -166,8 +166,8 @@
             .heading { font-size: 1.8rem; margin-top: 1.5rem; margin-bottom: 1.5rem; }
             .heading .line1 { padding-left: 0; text-align: center; }
             .company-row { grid-template-columns: 1fr; }
-            .voice-buttons { display: flex; flex-wrap: wrap; gap: 8px; }
-            .voice-btn { flex: 1 1 calc(50% - 8px); min-width: 0; text-align: center; }
+            .voice-global { gap: 6px; }
+            .voice-pill { flex: 1 1 auto; text-align: center; min-width: 0; }
             body { margin: 20px auto; }
             .popover { width: calc(100vw - 40px) !important; left: 20px !important; }
         }
@@ -278,7 +278,7 @@
         <div class="back-header">Competes with</div>
         <div class="pill-row"><a class="comp-pill" href="https://mixpanel.com" target="_blank" rel="noopener" style="border-color:#E8E0D0;color:#C06820;">Mixpanel</a><a class="comp-pill" href="https://amplitude.com" target="_blank" rel="noopener" style="border-color:#E8E0D0;color:#C06820;">Amplitude</a><a class="comp-pill" href="https://heap.io" target="_blank" rel="noopener" style="border-color:#E8E0D0;color:#C06820;">Heap</a><a class="comp-pill" href="https://www.fullstory.com" target="_blank" rel="noopener" style="border-color:#E8E0D0;color:#C06820;">FullStory</a><a class="comp-pill" href="https://launchdarkly.com" target="_blank" rel="noopener" style="border-color:#E8E0D0;color:#C06820;">LaunchDarkly</a></div>
       </div>
-      
+      <div class="back-section"><div class="back-header">Community Pulse</div><div class="reddit-sentiment-text">Based on these limited posts, PostHog users appreciate the breadth of the platform&#39;s analytics capabilities, particularly the session replay and heatmaps features that provide visual insights into user behavior. However, there&#39;s some confusion and frustration around feature discoverability, with at least one long-time user uncertain about whether certain features like bug reporting and micro-surveys are actually available to customers. The overall tone is curious and engaged rather than negative, suggesting users are invested in the platform but want clearer documentation or communication about what features they have access to. The community appears small but active, with users seeking information directly through Reddit when they can&#39;t find answers elsewhere.</div></div>
     </div>
 
   </div>
@@ -347,7 +347,7 @@
         <div class="back-header">Competes with</div>
         <div class="pill-row"><a class="comp-pill" href="https://www.atlassian.com/software/jira" target="_blank" rel="noopener" style="border-color:#8B94E0;color:#6B73CC;">Jira</a><a class="comp-pill" href="https://asana.com" target="_blank" rel="noopener" style="border-color:#8B94E0;color:#6B73CC;">Asana</a><a class="comp-pill" href="https://github.com/features/issues" target="_blank" rel="noopener" style="border-color:#8B94E0;color:#6B73CC;">GitHub Issues</a><a class="comp-pill" href="https://shortcut.com" target="_blank" rel="noopener" style="border-color:#8B94E0;color:#6B73CC;">Shortcut</a></div>
       </div>
-      
+      <div class="back-section"><div class="back-header">Community Pulse</div><div class="reddit-sentiment-text">Based on these limited posts, the community sentiment is mixed and sparse. Users appreciate Linear&#39;s core functionality but question its value proposition for solo developers and individual projects, suggesting it may be over-engineered for non-team use cases. A key pain point is unclear guidance on project organization, particularly how to structure multiple applications and client work within the platform. The overall tone is cautiously interested but skeptical about whether Linear justifies its complexity for smaller-scale development work.</div></div>
     </div>
 
   </div>
@@ -416,7 +416,7 @@
         <div class="back-header">Competes with</div>
         <div class="pill-row"><a class="comp-pill" href="https://www.make.com" target="_blank" rel="noopener" style="border-color:#FF7A3D;color:#E05515;">Make</a><a class="comp-pill" href="https://n8n.io" target="_blank" rel="noopener" style="border-color:#FF7A3D;color:#E05515;">n8n</a><a class="comp-pill" href="https://www.workato.com" target="_blank" rel="noopener" style="border-color:#FF7A3D;color:#E05515;">Workato</a><a class="comp-pill" href="https://powerautomate.microsoft.com" target="_blank" rel="noopener" style="border-color:#FF7A3D;color:#E05515;">Power Automate</a></div>
       </div>
-      
+      <div class="back-section"><div class="back-header">Community Pulse</div><div class="reddit-sentiment-text">The Zapier community shows a split sentiment: users appreciate the platform&#39;s ease of use and new features like Bulk Imports, but reliability concerns dominate discussions with multiple reports of silent failures and unexpected downtime that impact production workflows. Cost is a recurring frustration, with users noting that Zapier&#39;s pricing becomes expensive as usage scales, prompting some to explore alternatives like n8n and Make. There are also technical issues surfacing, including API errors with legacy bundle syntax and integration limitations that force workarounds. Overall, the tone reflects cautious frustration from established users who value the platform&#39;s accessibility but increasingly question whether it&#39;s trustworthy and cost-effective for serious business operations.</div></div>
     </div>
 
   </div>
@@ -485,7 +485,7 @@
         <div class="back-header">Competes with</div>
         <div class="pill-row"><a class="comp-pill" href="https://github.com/features/codespaces" target="_blank" rel="noopener" style="border-color:#AAAAAA;color:#777777;">GitHub Codespaces</a><a class="comp-pill" href="https://glitch.com" target="_blank" rel="noopener" style="border-color:#AAAAAA;color:#777777;">Glitch</a><a class="comp-pill" href="https://codesandbox.io" target="_blank" rel="noopener" style="border-color:#AAAAAA;color:#777777;">CodeSandbox</a><a class="comp-pill" href="https://cursor.com" target="_blank" rel="noopener" style="border-color:#AAAAAA;color:#777777;">Cursor</a></div>
       </div>
-      
+      <div class="back-section"><div class="back-header">Community Pulse</div><div class="reddit-sentiment-text">The Replit community is enthusiastic about the platform&#39;s ability to help non-developers and first-time founders quickly launch real products and achieve early success, with several users sharing stories of making their first sales or attracting investor interest. However, there&#39;s significant frustration around pricing, particularly the AI credit system which users feel depletes too quickly and forces long waiting periods for replenishment, and the overall cost of keeping apps running is pushing some users to explore alternatives. Performance issues surface in discussions about larger applications, with users noting slowdowns in apps with massive codebases and excessive server communication, plus some complaints about the platform&#39;s mobile-only workflow limitations. The overall tone is mixed: gratitude mixed with disappointment, as users acknowledge Replit&#39;s value for rapid prototyping but increasingly question whether it remains sustainable or cost-effective as projects scale.</div></div>
     </div>
 
   </div>
