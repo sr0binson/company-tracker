@@ -7,6 +7,7 @@ import re
 import time
 from datetime import date as date_cls
 from email.utils import parsedate_to_datetime
+from html import unescape
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -126,9 +127,17 @@ cursor.execute("""
         company TEXT,
         summary TEXT,
         fetched_date TEXT,
+        sources_json TEXT,
+        raw_titles_json TEXT,
         UNIQUE(company, fetched_date)
     )
 """)
+
+for _col in ("sources_json", "raw_titles_json"):
+    try:
+        cursor.execute(f"ALTER TABLE reddit_sentiment ADD COLUMN {_col} TEXT")
+    except Exception:
+        pass
 
 # Add voice columns to existing databases that predate this schema
 for col in ("analogy", "analogy_90s", "analogy_genz", "analogy_medieval", "analogy_aifluff", "analogy_plain"):
@@ -270,9 +279,9 @@ if _voice_backfill:
 
 REDDIT_SUBREDDITS = {
     "PostHog": "posthog",
-    "Zapier": "zapier",
-    "Replit": "replit",
-    "Linear": "linear",
+    "Zapier":  "zapier",
+    "Replit":  "replit",
+    "Linear":  "linear",
 }
 
 _REDDIT_RSS_HEADERS = {
@@ -282,13 +291,13 @@ _REDDIT_RSS_HEADERS = {
 _NS_ATOM = {"atom": "http://www.w3.org/2005/Atom"}
 
 def _strip_html(text):
-    """Remove HTML tags and decode common entities."""
     text = re.sub(r'<[^>]+>', ' ', text)
-    text = text.replace('&amp;', '&').replace('&lt;', '<').replace('&gt;', '>').replace('&quot;', '"').replace('&#39;', "'").replace('&nbsp;', ' ')
+    for ent, ch in [('&amp;','&'),('&lt;','<'),('&gt;','>'),('&quot;','"'),('&#39;',"'"),('&nbsp;',' ')]:
+        text = text.replace(ent, ch)
     return re.sub(r'\s+', ' ', text).strip()
 
 def fetch_reddit_posts(subreddit):
-    """Fetch top posts from a subreddit via the public Atom RSS feed."""
+    """Top posts from a subreddit via the public Atom RSS feed (no auth required)."""
     url = f"https://www.reddit.com/r/{subreddit}/top.rss?t=week&limit=25"
     req = urllib.request.Request(url, headers=_REDDIT_RSS_HEADERS)
     with urllib.request.urlopen(req, timeout=15) as resp:
@@ -296,33 +305,84 @@ def fetch_reddit_posts(subreddit):
     root = ET.fromstring(raw.decode("utf-8", errors="replace"))
     posts = []
     for entry in root.findall("atom:entry", _NS_ATOM):
-        title_el  = entry.find("atom:title", _NS_ATOM)
+        title_el   = entry.find("atom:title",   _NS_ATOM)
         content_el = entry.find("atom:content", _NS_ATOM)
-        link_el   = entry.find("atom:link", _NS_ATOM)
+        link_el    = entry.find("atom:link",    _NS_ATOM)
         title = sanitize_input((title_el.text or "").strip()) if title_el is not None else ""
-        body  = _strip_html(content_el.text or "") if content_el is not None else ""
-        link  = link_el.get("href", "") if link_el is not None else ""
+        body  = _strip_html(content_el.text or "")           if content_el is not None else ""
+        link  = link_el.get("href", "")                      if link_el is not None else ""
         if title:
-            posts.append({
-                "title":   title,
-                "selftext": sanitize_input(body[:500]),
-                "link":    link,
-            })
+            posts.append({"title": title, "body": sanitize_input(body[:400]), "url": link})
     return posts
 
-def get_reddit_sentiment_summary(company, posts):
+_POSTHOG_STRAPI = "https://better-animal-d658c56969.strapiapp.com/api"
+
+def fetch_posthog_questions(limit=20):
+    """Recent questions from posthog.com/questions via their public Strapi API."""
+    url = (f"{_POSTHOG_STRAPI}/questions"
+           f"?fields[0]=subject&fields[1]=permalink&fields[2]=activeAt"
+           f"&pagination[limit]={limit}&sort=activeAt:desc")
+    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0", "Accept": "application/json"})
+    with urllib.request.urlopen(req, timeout=15) as resp:
+        data = json.loads(resp.read())
+    posts = []
+    for item in data.get("data", []):
+        attrs = item.get("attributes", {})
+        subject   = sanitize_input(attrs.get("subject", "").strip())
+        permalink = attrs.get("permalink", "")
+        if subject and permalink:
+            posts.append({"title": subject, "body": "", "url": f"https://posthog.com/questions/{permalink}"})
+    return posts
+
+_ZAPIER_COMMUNITY_CATS = [
+    "https://community.zapier.com/get-help-50",
+    "https://community.zapier.com/troubleshooting-99",
+]
+
+def fetch_zapier_community(limit=20):
+    """Recent posts from community.zapier.com via HTML scraping (entity-encoded JSON)."""
+    posts = []
+    seen  = set()
+    for cat_url in _ZAPIER_COMMUNITY_CATS:
+        req = urllib.request.Request(cat_url, headers={"User-Agent": "Mozilla/5.0 (compatible)"})
+        try:
+            with urllib.request.urlopen(req, timeout=15) as resp:
+                html = resp.read().decode("utf-8", errors="replace")
+        except Exception as e:
+            print(f"    Zapier category error ({cat_url}): {e}")
+            continue
+        pairs = re.findall(
+            r'&quot;topicUrl&quot;:\{&quot;destination&quot;:&quot;((?:[^&]|&(?!quot;))+)&quot;\}'
+            r'.{0,300}?&quot;title&quot;:&quot;((?:[^&]|&(?!quot;))+)&quot;,&quot;content&quot;:',
+            html, re.DOTALL
+        )
+        for raw_url, raw_title in pairs:
+            title = sanitize_input(unescape(raw_title).strip())
+            url   = unescape(raw_url).replace("\\/", "/")
+            if not title or title in seen:
+                continue
+            if title.lower().startswith("about the"):
+                continue
+            seen.add(title)
+            posts.append({"title": title, "body": "", "url": url})
+            if len(posts) >= limit:
+                return posts
+        time.sleep(1)
+    return posts
+
+def get_community_pulse_summary(company, all_posts):
     if not ANTHROPIC_API_KEY:
         return "Sentiment summary unavailable."
 
     lines = []
-    for post in posts:
-        lines.append(f"Title: {post['title']}")
-        if post["selftext"]:
-            lines.append(f"  Body: {post['selftext'][:400]}")
+    for post in all_posts:
+        lines.append(f"- {post['title']}")
+        if post.get("body"):
+            lines.append(f"  {post['body'][:300]}")
 
     content = "\n".join(lines)[:3500]
 
-    prompt = f"""These are the top Reddit posts from r/{company.lower()} this week:
+    prompt = f"""These are recent posts from {company}'s community forums and social channels:
 
 {content}
 
@@ -348,35 +408,81 @@ Write 3-4 sentences summarizing community sentiment about {company}. Cover what 
             result = json.loads(response.read())
             return result["content"][0]["text"].strip()
     except Exception as e:
-        print(f"  Reddit sentiment AI error: {e}")
+        print(f"  Community pulse AI error: {e}")
         return "Sentiment summary unavailable."
 
 def fetch_reddit_sentiment():
     today = date_cls.today().isoformat()
     for company, subreddit in REDDIT_SUBREDDITS.items():
+        # Skip only if we already have a fully-populated row for today
         existing = cursor.execute(
-            "SELECT id FROM reddit_sentiment WHERE company = ? AND fetched_date = ?",
+            "SELECT id FROM reddit_sentiment WHERE company = ? AND fetched_date = ? AND sources_json IS NOT NULL",
             (company, today)
         ).fetchone()
         if existing:
-            print(f"  {company}: Reddit sentiment already fetched today, skipping.")
+            print(f"  {company}: Community Pulse already fetched today, skipping.")
             continue
 
-        print(f"Fetching Reddit sentiment for {company} (r/{subreddit})...")
-        try:
-            posts = fetch_reddit_posts(subreddit)
-            print(f"  Got {len(posts)} posts.")
-            time.sleep(2)
+        print(f"Fetching community data for {company}...")
+        sources   = []
+        all_posts = []
 
-            summary = get_reddit_sentiment_summary(company, posts)
-            cursor.execute(
-                "INSERT OR IGNORE INTO reddit_sentiment (company, summary, fetched_date) VALUES (?, ?, ?)",
-                (company, summary, today)
-            )
-            conn.commit()
-            print(f"  {company}: Reddit sentiment stored.")
+        # Reddit (all companies)
+        try:
+            reddit_posts = fetch_reddit_posts(subreddit)
+            print(f"  r/{subreddit}: {len(reddit_posts)} posts")
+            if reddit_posts:
+                sources.append({"name": f"r/{subreddit}",
+                                "url":  f"https://www.reddit.com/r/{subreddit}/",
+                                "count": len(reddit_posts)})
+                all_posts.extend(reddit_posts)
+            time.sleep(2)
         except Exception as e:
-            print(f"  Error fetching Reddit sentiment for {company}: {e}")
+            print(f"  Reddit error: {e}")
+
+        # PostHog questions (PostHog only)
+        if company == "PostHog":
+            try:
+                ph_posts = fetch_posthog_questions()
+                print(f"  posthog.com/questions: {len(ph_posts)} posts")
+                if ph_posts:
+                    sources.append({"name": "posthog.com/questions",
+                                    "url":  "https://posthog.com/questions",
+                                    "count": len(ph_posts)})
+                    all_posts.extend(ph_posts)
+            except Exception as e:
+                print(f"  PostHog questions error: {e}")
+
+        # Zapier community (Zapier only)
+        elif company == "Zapier":
+            try:
+                zap_posts = fetch_zapier_community()
+                print(f"  community.zapier.com: {len(zap_posts)} posts")
+                if zap_posts:
+                    sources.append({"name": "community.zapier.com",
+                                    "url":  "https://community.zapier.com",
+                                    "count": len(zap_posts)})
+                    all_posts.extend(zap_posts)
+            except Exception as e:
+                print(f"  Zapier community error: {e}")
+
+        if not all_posts:
+            print(f"  No posts found for {company}, skipping.")
+            continue
+
+        summary    = get_community_pulse_summary(company, all_posts)
+        raw_titles = [p["title"] for p in all_posts]
+
+        # Replace any incomplete row from today (missing sources_json) with the full one
+        cursor.execute("DELETE FROM reddit_sentiment WHERE company = ? AND fetched_date = ?",
+                       (company, today))
+        cursor.execute(
+            """INSERT INTO reddit_sentiment (company, summary, fetched_date, sources_json, raw_titles_json)
+               VALUES (?, ?, ?, ?, ?)""",
+            (company, summary, today, json.dumps(sources), json.dumps(raw_titles))
+        )
+        conn.commit()
+        print(f"  {company}: stored ({len(all_posts)} posts, {len(sources)} sources).")
 
 ASHBY_SLUGS = {
     "PostHog": "posthog",

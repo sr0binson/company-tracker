@@ -82,12 +82,20 @@ except Exception:
 
 try:
     reddit_rows = cursor.execute("""
-        SELECT company, summary FROM reddit_sentiment
+        SELECT company, summary, sources_json, raw_titles_json FROM reddit_sentiment
         WHERE fetched_date = (SELECT MAX(fetched_date) FROM reddit_sentiment WHERE company = reddit_sentiment.company)
         GROUP BY company
     """).fetchall()
-    reddit_sentiment_by_company = {company: summary for company, summary in reddit_rows}
-except Exception:
+    reddit_sentiment_by_company = {
+        company: {
+            "summary": summary or "",
+            "sources": json.loads(sources_json or "[]"),
+            "titles":  json.loads(raw_titles_json or "[]"),
+        }
+        for company, summary, sources_json, raw_titles_json in reddit_rows
+    }
+except Exception as e:
+    print(f"Warning: reddit_sentiment query failed: {e}")
     reddit_sentiment_by_company = {}
 
 conn.close()
@@ -523,6 +531,17 @@ html = """<!DOCTYPE html>
         .hiring-summary-date { font-size: 0.7rem; color: #ccc; }
         .hiring-summary-text { font-size: 0.85rem; color: #444; line-height: 1.65; }
         .reddit-sentiment-text { font-size: 0.73rem; color: #555; line-height: 1.6; }
+        .pulse-sources { font-size: 0.63rem; color: #bbb; margin-top: 7px; line-height: 1.7; }
+        .pulse-sources a { color: #aaa; text-decoration: none; border-bottom: 1px dotted #ddd; }
+        .pulse-sources a:hover { color: #666; border-bottom-color: #aaa; }
+        .pulse-details { margin-top: 6px; }
+        .pulse-details summary { font-size: 0.63rem; color: #ccc; cursor: pointer; list-style: none; user-select: none; }
+        .pulse-details summary::-webkit-details-marker { display: none; }
+        .pulse-details summary::before { content: '▸ '; }
+        .pulse-details[open] summary::before { content: '▾ '; }
+        .pulse-titles { margin: 5px 0 0; padding: 0; list-style: none; max-height: 130px; overflow-y: auto; border-top: 1px solid #f0f0f0; padding-top: 4px; }
+        .pulse-titles li { font-size: 0.62rem; color: #bbb; padding: 2px 0; border-bottom: 1px solid #f8f8f8; line-height: 1.4; }
+        .pulse-titles li:last-child { border-bottom: none; }
 
         /* News ticker */
         .ticker-wrap { position: fixed; top: 0; left: 0; width: 100%; background: #0a0a0a; border-bottom: 1px solid #1a1a1a; padding: 8px 0; z-index: 9999; overflow: hidden; font-family: 'Courier New', monospace; }
@@ -618,6 +637,36 @@ _ticker_html = (
 ) if ticker_items else ""
 html = html.replace("{ticker_placeholder}", _ticker_html)
 
+# ── Community Pulse card builder ──────────────────────────────────────────────
+
+def _build_pulse_html(summary, sources, titles, esc):
+    if not summary:
+        return ''
+    parts = ['<div class="back-section">',
+             '<div class="back-header">Community Pulse</div>',
+             f'<div class="reddit-sentiment-text">{esc(summary)}</div>']
+
+    if sources:
+        source_links = ', '.join(
+            f'<a href="{esc(s["url"])}" target="_blank" rel="noopener">'
+            f'{esc(s["name"])}</a> ({s["count"]})'
+            for s in sources
+        )
+        parts.append(f'<div class="pulse-sources">Sources: {source_links}</div>')
+
+    if titles:
+        total = len(titles)
+        items = ''.join(f'<li>{esc(t)}</li>' for t in titles)
+        parts.append(
+            f'<details class="pulse-details">'
+            f'<summary>{total} posts analyzed</summary>'
+            f'<ul class="pulse-titles">{items}</ul>'
+            f'</details>'
+        )
+
+    parts.append('</div>')
+    return '\n      '.join(parts)
+
 # ── per-company rows ───────────────────────────────────────────────────────────
 
 for company in ["PostHog", "Linear", "Zapier", "Replit"]:
@@ -632,7 +681,10 @@ for company in ["PostHog", "Linear", "Zapier", "Replit"]:
 
     bsvg  = bubble_svg(kw, color)
     ssvg  = sparkline_svg(monthly, accent)
-    reddit_summary = reddit_sentiment_by_company.get(company, "")
+    pulse_data     = reddit_sentiment_by_company.get(company, {})
+    reddit_summary = pulse_data.get("summary", "")
+    pulse_sources  = pulse_data.get("sources", [])
+    pulse_titles   = pulse_data.get("titles", [])
 
     rtypes     = release_type_counts.get(company, {'feature': 0, 'bugfix': 0, 'maintenance': 0})
     feat_color = accent
@@ -749,7 +801,7 @@ for company in ["PostHog", "Linear", "Zapier", "Replit"]:
         <div class="back-header">Competes with</div>
         <div class="pill-row">{comp_pills}</div>
       </div>
-      {f'<div class="back-section"><div class="back-header">Community Pulse</div><div class="reddit-sentiment-text">{html_escape(reddit_summary)}</div></div>' if reddit_summary else ''}
+      {_build_pulse_html(reddit_summary, pulse_sources, pulse_titles, html_escape)}
     </div>
 
   </div>
