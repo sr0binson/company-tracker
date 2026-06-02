@@ -724,7 +724,7 @@ for company, url in FEEDS.items():
                     continue
 
                 existing = cursor.execute(
-                    "SELECT id, analogy FROM blog_posts WHERE id = ?", (entry_id,)
+                    "SELECT id, analogy, analogy_plain FROM blog_posts WHERE id = ?", (entry_id,)
                 ).fetchone()
 
                 if existing is None:
@@ -746,7 +746,7 @@ for company, url in FEEDS.items():
                           sanitize_input(voices["analogy_medieval"]),
                           sanitize_input(voices["analogy_aifluff"]),
                           sanitize_input(voices["analogy_plain"])))
-                elif existing[1] is None or existing[1] == '':
+                elif existing[1] is None or existing[1] == '' or existing[2] is None or existing[2] == '':
                     print(f"  Backfilling analogy for: {title}")
                     _, analogy = get_ai_summary(title, content)
                     if not analogy:
