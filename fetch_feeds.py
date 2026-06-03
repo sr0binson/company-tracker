@@ -484,7 +484,8 @@ def fetch_reddit_sentiment():
         # Skip only if we already have a fully-populated row (with voice summaries) for today
         existing = cursor.execute(
             "SELECT id FROM reddit_sentiment WHERE company = ? AND fetched_date = ? "
-            "AND sources_json IS NOT NULL AND summary_90s IS NOT NULL",
+            "AND sources_json IS NOT NULL AND summary_90s IS NOT NULL AND summary_90s != '' "
+            "AND summary != 'Sentiment summary unavailable.'",
             (company, today)
         ).fetchone()
         if existing:
