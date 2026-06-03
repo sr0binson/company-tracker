@@ -85,7 +85,11 @@ try:
         SELECT company, summary, sources_json, raw_titles_json,
                summary_90s, summary_genz, summary_medieval, summary_aifluff
         FROM reddit_sentiment
-        WHERE fetched_date = (SELECT MAX(fetched_date) FROM reddit_sentiment WHERE company = reddit_sentiment.company)
+        WHERE fetched_date = (
+            SELECT MAX(fetched_date) FROM reddit_sentiment AS rs2
+            WHERE rs2.company = reddit_sentiment.company
+              AND rs2.summary_90s IS NOT NULL AND rs2.summary_90s != ''
+        )
         GROUP BY company
     """).fetchall()
     reddit_sentiment_by_company = {
