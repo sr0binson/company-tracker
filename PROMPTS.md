@@ -250,3 +250,4 @@ Fixed 3 bugs in generate_html.py: (1) company tag pill spanning full card width,
 ### 2026-05-31 — Subtitle typewriter animation ('unearthed…' types in on load) with blinking cursor; dirt particle burst on completion; grid cards nudged 30px closer to header
 
 ### 2026-06-02 — backfill analogy_plain alongside analogy in blog_posts fetch logic
+### 2026-06-03 — fixed Community Pulse showing blank summaries by skipping reddit_sentiment error rows in generate_html.py
