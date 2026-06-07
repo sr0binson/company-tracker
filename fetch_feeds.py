@@ -283,13 +283,16 @@ def get_pulse_voice_summary(plain_summary, voice_instruction):
             "anthropic-version": "2023-06-01"
         }
     )
-    try:
-        with urllib.request.urlopen(req, timeout=20) as response:
-            result = json.loads(response.read())
-            return result["content"][0]["text"].strip()
-    except Exception as e:
-        print(f"  Pulse voice error: {e}")
-        return ""
+    for attempt in range(3):
+        try:
+            with urllib.request.urlopen(req, timeout=20) as response:
+                result = json.loads(response.read())
+                return result["content"][0]["text"].strip()
+        except Exception as e:
+            print(f"  Pulse voice error (attempt {attempt + 1}/3): {e}")
+            if attempt < 2:
+                time.sleep(2)
+    return ""
 
 # Backfill base analogy for existing posts that predate this feature
 _backfill = cursor.execute("""
