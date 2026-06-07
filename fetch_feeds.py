@@ -209,7 +209,7 @@ VOICE_PROMPTS = {
 # NOTE: each new post triggers 5 extra API calls (one per voice) on top of the
 # main summary call. Budget ~6 Haiku calls per new post at fetch time.
 def get_voice_analogy(original_analogy, voice_instruction):
-    if not ANTHROPIC_API_KEY or not original_analogy:
+    if not ANTHROPIC_API_KEY or not original_analogy or original_analogy == "Analogy unavailable.":
         return ""
 
     prompt = f"{voice_instruction}\n\nOriginal: {original_analogy}"
