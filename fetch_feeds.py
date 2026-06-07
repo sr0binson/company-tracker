@@ -263,7 +263,7 @@ PULSE_VOICE_PROMPTS = {
 }
 
 def get_pulse_voice_summary(plain_summary, voice_instruction):
-    if not ANTHROPIC_API_KEY or not plain_summary:
+    if not ANTHROPIC_API_KEY or not plain_summary or plain_summary == "Sentiment summary unavailable.":
         return ""
 
     prompt = f"{voice_instruction}\n\nOriginal summary:\n{plain_summary}"
