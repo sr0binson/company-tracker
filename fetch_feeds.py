@@ -156,7 +156,7 @@ conn.commit()
 
 def get_ai_summary(title, content):
     if not ANTHROPIC_API_KEY:
-        return "Summary unavailable.", "Analogy unavailable."
+        return "", ""
 
     if not content or len(content.strip()) < 20:
         return title, ""
@@ -196,7 +196,7 @@ Respond ONLY with valid JSON, no markdown, no backticks, exactly this format:
             return parsed.get("summary", ""), parsed.get("analogy", "")
     except Exception as e:
         print(f"AI error: {e}")
-        return "Summary unavailable.", "Analogy unavailable."
+        return "", ""
 
 VOICE_PROMPTS = {
     "analogy_90s":      "Rewrite this analogy in late 90s R&B and hip hop slang. Use phrases like 'all that and a bag of chips', 'da bomb', 'feel me', 'no doubt', 'word', 'straight up', 'mad [adjective]', 'on the real', 'that joint is', 'for real for real'. One sentence, no quotes.",
