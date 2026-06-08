@@ -251,3 +251,8 @@ Fixed 3 bugs in generate_html.py: (1) company tag pill spanning full card width,
 
 ### 2026-06-02 — backfill analogy_plain alongside analogy in blog_posts fetch logic
 ### 2026-06-03 — fixed Community Pulse showing blank summaries by skipping reddit_sentiment error rows in generate_html.py
+### 2026-06-07 — wrapped get_pulse_voice_summary API call with 3-attempt retry loop and 2s sleep between attempts
+### 2026-06-07 — added guard in get_pulse_voice_summary to return empty string when base summary is unavailable
+### 2026-06-07 — added guard in get_voice_analogy to skip API call when analogy is unavailable, cleared and backfilled 30 bad voice rows
+### 2026-06-07 — fixed posthog.init double braces syntax error in generate_html.py that was breaking JS
+### 2026-06-07 — reverted psummary to use r.summary instead of analogy_plain fallback
