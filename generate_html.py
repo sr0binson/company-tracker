@@ -209,10 +209,52 @@ company_accent = {
 }
 
 WHO_THEY_SERVE = {
-    "PostHog": ["devs", "product teams", "startups", "growth companies"],
-    "Linear":  ["software teams", "product engineers", "design startups"],
-    "Zapier":  ["small businesses", "ops teams", "solopreneurs", "non-technical users"],
-    "Replit":  ["students", "beginner devs", "educators", "indie hackers"],
+    "PostHog": ["startups", "dev tools", "AI companies", "growth stage"],
+    "Linear":  ["AI companies", "fintech", "cloud infra", "dev teams"],
+    "Zapier":  ["remote work", "collaboration", "productivity", "enterprise ops"],
+    "Replit":  ["enterprise", "data platforms", "fintech", "creative tools"],
+}
+CUSTOMERS = {
+    "PostHog": {
+        "list": [
+            ("YCombinator", "https://www.ycombinator.com"),
+            ("Supabase",    "https://supabase.com"),
+            ("Lovable",     "https://lovable.dev"),
+            ("Mintlify",    "https://mintlify.com"),
+            ("11x",         "https://11x.ai"),
+        ],
+        "source": "https://posthog.com/customers",
+    },
+    "Zapier": {
+        "list": [
+            ("Remote",      "https://remote.com"),
+            ("Miro",        "https://miro.com"),
+            ("Otter.ai",    "https://otter.ai"),
+            ("Superhuman",  "https://superhuman.com"),
+            ("Vendavo",     "https://www.vendavo.com"),
+        ],
+        "source": "https://zapier.com/customer-stories",
+    },
+    "Linear": {
+        "list": [
+            ("OpenAI",  "https://openai.com"),
+            ("Ramp",    "https://ramp.com"),
+            ("Mercury", "https://mercury.com"),
+            ("Cohere",  "https://cohere.com"),
+            ("Render",  "https://render.com"),
+        ],
+        "source": "https://linear.app/customers",
+    },
+    "Replit": {
+        "list": [
+            ("Zillow",      "https://zillow.com"),
+            ("Databricks",  "https://databricks.com"),
+            ("PayPal",      "https://paypal.com"),
+            ("Adobe",       "https://adobe.com"),
+            ("Talkdesk",    "https://www.talkdesk.com"),
+        ],
+        "source": "https://replit.com/customers",
+    },
 }
 COMPETITORS = {
     "PostHog": ["Mixpanel", "Amplitude", "Heap", "FullStory", "LaunchDarkly"],
@@ -491,7 +533,14 @@ html = """<!DOCTYPE html>
         .back-section { margin-bottom: 4px; }
         .back-header { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: #999; margin-bottom: 5px; }
         .pill-row { display: flex; flex-wrap: wrap; gap: 5px; }
-        .serve-pill { font-size: 0.7rem; padding: 3px 9px; border-radius: 20px; background: #f4f4f4; color: #555; font-weight: 500; }
+        .serve-pill { font-size: 0.7rem; padding: 3px 9px; border-radius: 20px; background: #f4f4f4; color: #555; font-weight: 500; cursor: pointer; border: none; position: relative; }
+        .serve-pill:hover { background: #e0e0e0; }
+        .cust-dropdown { display: none; position: absolute; z-index: 999; background: white; border: 1px solid #ddd; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.12); padding: 6px 0; min-width: 160px; margin-top: 4px; }
+        .cust-dropdown.open { display: block; }
+        .cust-item { display: block; padding: 5px 14px; font-size: 0.72rem; color: #222; text-decoration: none; font-family: 'Sora', sans-serif; }
+        .cust-item:hover { background: #f5f5f5; }
+        .cust-show-all { display: block; padding: 5px 14px; font-size: 0.68rem; color: #888; text-decoration: none; border-top: 1px solid #eee; margin-top: 4px; font-family: 'Sora', sans-serif; }
+        .cust-show-all:hover { color: #444; }
         .comp-pill  { font-size: 0.7rem; padding: 3px 9px; border-radius: 20px; background: white; font-weight: 500; border: 1.5px solid; cursor: pointer; text-decoration: none; }
 
         /* Voice pills */
@@ -779,8 +828,19 @@ for company in ["PostHog", "Linear", "Zapier", "Replit"]:
                               f'target="_blank" rel="noopener">{html_escape(jt)}</a>')
 
     # back face pills
-    serve_pills = ''.join(
-        f'<span class="serve-pill">{html_escape(s)}</span>'
+    _cust_data   = CUSTOMERS.get(company, {})
+    _cust_list   = _cust_data.get("list", [])
+    _cust_source = _cust_data.get("source", "#")
+    _cust_items  = "".join(
+        f'<a class="cust-item" href="{html_escape(url)}" target="_blank" rel="noopener">{html_escape(name)}</a>'
+        for name, url in _cust_list[:5]
+    )
+    _show_all    = f'<a class="cust-show-all" href="{html_escape(_cust_source)}" target="_blank" rel="noopener">Show all &rarr;</a>'
+    serve_pills  = ''.join(
+        f'<button class="serve-pill" onclick="toggleCustomers(event,\'cust-{card_id}-{html_escape(s).replace(" ","-")}\')">'
+        f'{html_escape(s)}</button>'
+        f'<div class="cust-dropdown" id="cust-{card_id}-{html_escape(s).replace(" ","-")}">'
+        f'{_cust_items}{_show_all}</div>'
         for s in WHO_THEY_SERVE.get(company, [])
     )
     comp_pills = ''.join(
@@ -1037,6 +1097,19 @@ html += """
             '@keyframes zap-burst-anim { 0% { opacity:1; transform:translate(-50%,-50%) scale(0.6) rotate(-20deg); } 30% { opacity:1; transform:translate(-50%,-50%) scale(1.4) rotate(10deg); } 60% { opacity:0.8; transform:translate(-50%,-50%) scale(1.1) rotate(-4deg); } 100% { opacity:0; transform:translate(-50%,-50%) scale(0.8); } }'
         ].join('\\n');
         document.head.appendChild(styleSheet);
+
+        // ── customer dropdown ────────────────────────────────────────────────
+        function toggleCustomers(e, id) {
+            e.stopPropagation();
+            var el = document.getElementById(id);
+            if (!el) return;
+            var isOpen = el.classList.contains('open');
+            document.querySelectorAll('.cust-dropdown.open').forEach(function(d) { d.classList.remove('open'); });
+            if (!isOpen) el.classList.add('open');
+        }
+        document.addEventListener('click', function() {
+            document.querySelectorAll('.cust-dropdown.open').forEach(function(d) { d.classList.remove('open'); });
+        });
 
         // ── voice pills ──────────────────────────────────────────────────────
         window.activeVoice = 'plain';
