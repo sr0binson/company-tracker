@@ -216,45 +216,31 @@ WHO_THEY_SERVE = {
 }
 CUSTOMERS = {
     "PostHog": {
-        "list": [
-            ("YCombinator", "https://www.ycombinator.com"),
-            ("Supabase",    "https://supabase.com"),
-            ("Lovable",     "https://lovable.dev"),
-            ("Mintlify",    "https://mintlify.com"),
-            ("11x",         "https://11x.ai"),
-        ],
-        "source": "https://posthog.com/customers",
-    },
-    "Zapier": {
-        "list": [
-            ("Remote",      "https://remote.com"),
-            ("Miro",        "https://miro.com"),
-            ("Otter.ai",    "https://otter.ai"),
-            ("Superhuman",  "https://superhuman.com"),
-            ("Vendavo",     "https://www.vendavo.com"),
-        ],
-        "source": "https://zapier.com/customer-stories",
+        "AI & Dev Tools": ["Mistral AI", "ElevenLabs", "Lovable", "HeyGen", "Greptile", "Exa", "Convex"],
+        "Startups & Accelerators": ["YCombinator", "StartEngine", "Raycast", "Resend", "Clerk", "Flow", "Hasura"],
+        "Enterprise & Institutions": ["Airbus", "Arena", "ResearchGate", "GOV.UK", "National Design Studio", "Paper", "Jaxxon", "Trust"]
     },
     "Linear": {
-        "list": [
-            ("OpenAI",  "https://openai.com"),
-            ("Ramp",    "https://ramp.com"),
-            ("Mercury", "https://mercury.com"),
-            ("Cohere",  "https://cohere.com"),
-            ("Render",  "https://render.com"),
-        ],
-        "source": "https://linear.app/customers",
+        "AI & Developer Tools": ["OpenAI", "Cursor", "Perplexity", "Clay", "Scale", "Vercel", "Sierra"],
+        "Fintech & Payments": ["Ramp", "Mercury", "Brex", "Cash App", "Coinbase", "Opendoor"],
+        "Enterprise & SaaS": ["Automattic", "Substack", "Remote", "Cars24", "Polymarket"]
+    },
+    "Zapier": {
+        "Enterprise & Operations": ["Okta", "Grammarly", "ServiceTitan", "Vendavo", "Vendasta", "Brightspot", "ActiveCampaign"],
+        "Sales & Marketing": ["Synthesia", "Hudl", "Veo", "Slate Magazine", "Laudable", "Smith.ai", "Contractor Appointments"],
+        "Small Biz & Productivity": ["Otter.ai", "Calendly", "Remote", "Lucidchart", "IPSY", "Erewhon", "Gold Rush Vinyl"]
     },
     "Replit": {
-        "list": [
-            ("Zillow",      "https://zillow.com"),
-            ("Databricks",  "https://databricks.com"),
-            ("PayPal",      "https://paypal.com"),
-            ("Adobe",       "https://adobe.com"),
-            ("Talkdesk",    "https://www.talkdesk.com"),
-        ],
-        "source": "https://replit.com/customers",
-    },
+        "Financial Services & Ecommerce": ["Plaid", "Rokt", "BatchData", "SaaStr", "Zinus"],
+        "Healthcare & Legal": ["Northern Health", "Norstella", "Spellbook", "Helix Electric", "Leatherman"],
+        "Media & Creative": ["Musixmatch", "Firecrown", "AllFly", "Greenleaf", "GenAIPI"]
+    }
+}
+SHOW_ALL_URLS = {
+    "PostHog": "https://posthog.com/customers",
+    "Linear": "https://linear.app/customers",
+    "Zapier": "https://zapier.com/customer-stories",
+    "Replit": "https://replit.com/customers"
 }
 COMPETITORS = {
     "PostHog": ["Mixpanel", "Amplitude", "Heap", "FullStory", "LaunchDarkly"],
@@ -828,20 +814,20 @@ for company in ["PostHog", "Linear", "Zapier", "Replit"]:
                               f'target="_blank" rel="noopener">{html_escape(jt)}</a>')
 
     # back face pills
-    _cust_data   = CUSTOMERS.get(company, {})
-    _cust_list   = _cust_data.get("list", [])
-    _cust_source = _cust_data.get("source", "#")
-    _cust_items  = "".join(
-        f'<a class="cust-item" href="{html_escape(url)}" target="_blank" rel="noopener">{html_escape(name)}</a>'
-        for name, url in _cust_list[:5]
-    )
-    _show_all    = f'<a class="cust-show-all" href="{html_escape(_cust_source)}" target="_blank" rel="noopener">Show all &rarr;</a>'
-    serve_pills  = ''.join(
-        f'<button class="serve-pill" onclick="toggleCustomers(event,\'cust-{card_id}-{html_escape(s).replace(" ","-")}\')">'
-        f'{html_escape(s)}</button>'
-        f'<div class="cust-dropdown" id="cust-{card_id}-{html_escape(s).replace(" ","-")}">'
-        f'{_cust_items}{_show_all}</div>'
-        for s in WHO_THEY_SERVE.get(company, [])
+    _cust_categories = CUSTOMERS.get(company, {})
+    _show_all_url    = html_escape(SHOW_ALL_URLS.get(company, "#"))
+    _show_all_link   = f'<a class="cust-show-all" href="{_show_all_url}" target="_blank" rel="noopener">Show all &rarr;</a>'
+    serve_pills = ''.join(
+        (lambda cat_id=f'cust-{card_id}-{html_escape(cat).replace(" ","-")}',
+                names=_cust_categories.get(cat, []):
+            f'<button class="serve-pill" onclick="toggleCustomers(event,\'{cat_id}\')">'
+            f'{html_escape(cat)}</button>'
+            f'<div class="cust-dropdown" id="{cat_id}">'
+            + ''.join(f'<span class="cust-item">{html_escape(n)}</span>' for n in names)
+            + _show_all_link
+            + '</div>'
+        )()
+        for cat in _cust_categories
     )
     comp_pills = ''.join(
         f'<a class="comp-pill" href="{COMPETITOR_URLS.get(c, "#")}" target="_blank" rel="noopener" style="border-color:{color};color:{accent};">{html_escape(c)}</a>'
@@ -1109,7 +1095,7 @@ html += """
         }
         document.addEventListener('click', function() {
             document.querySelectorAll('.cust-dropdown.open').forEach(function(d) { d.classList.remove('open'); });
-        });
+        }, true);
 
         // ── voice pills ──────────────────────────────────────────────────────
         window.activeVoice = 'plain';
