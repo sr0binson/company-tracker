@@ -1,4 +1,5 @@
 
 .env
 *.backup
+__pycache__/
 
