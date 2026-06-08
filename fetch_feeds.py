@@ -193,7 +193,10 @@ Respond ONLY with valid JSON, no markdown, no backticks, exactly this format:
             text = result["content"][0]["text"]
             text = text.strip().replace("```json", "").replace("```", "").strip()
             parsed = json.loads(text)
-            return parsed.get("summary", ""), parsed.get("analogy", "")
+            summary = parsed.get("summary", "")
+            if re.search(r'no blog post content|no content was provided', summary, re.IGNORECASE):
+                summary = ""
+            return summary, parsed.get("analogy", "")
     except Exception as e:
         print(f"AI error: {e}")
         return "", ""
@@ -233,7 +236,7 @@ def get_voice_analogy(original_analogy, voice_instruction):
     try:
         with urllib.request.urlopen(req) as response:
             result = json.loads(response.read())
-            return result["content"][0]["text"].strip()
+            return re.sub(r'^#+\s*', '', result["content"][0]["text"].strip())
     except Exception as e:
         print(f"Voice analogy error: {e}")
         return ""
@@ -287,7 +290,7 @@ def get_pulse_voice_summary(plain_summary, voice_instruction):
         try:
             with urllib.request.urlopen(req, timeout=20) as response:
                 result = json.loads(response.read())
-                return result["content"][0]["text"].strip()
+                return re.sub(r'^#+\s*', '', result["content"][0]["text"].strip())
         except Exception as e:
             print(f"  Pulse voice error (attempt {attempt + 1}/3): {e}")
             if attempt < 2:
@@ -476,7 +479,7 @@ Write 3-4 sentences summarizing community sentiment about {company}. Cover what 
     try:
         with urllib.request.urlopen(req, timeout=20) as response:
             result = json.loads(response.read())
-            return result["content"][0]["text"].strip()
+            return re.sub(r'^#+\s*', '', result["content"][0]["text"].strip())
     except Exception as e:
         print(f"  Community pulse AI error: {e}")
         return "Sentiment summary unavailable."
