@@ -1,5 +1,11 @@
 # CLAUDE.md
 
+## Start of Session Checklist
+
+- Git pull and database backups run automatically via session hook.
+- Always read this file before starting any work.
+- Never edit `fetch_feeds.py`, `generate_html.py`, `validate.py`, `autofix.py`, `alert.py`, or `fetch.yml` without confirming with the user first.
+
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## What this project is

@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "git pull && cp releases.db releases.db.backup && cp companies.db companies.db.backup && cp logs.db logs.db.backup",
+            "statusMessage": "Pulling latest changes and backing up databases..."
+          }
+        ]
+      }
+    ]
+  }
+}
