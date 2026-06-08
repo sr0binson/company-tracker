@@ -256,3 +256,4 @@ Fixed 3 bugs in generate_html.py: (1) company tag pill spanning full card width,
 ### 2026-06-07 — added guard in get_voice_analogy to skip API call when analogy is unavailable, cleared and backfilled 30 bad voice rows
 ### 2026-06-07 — fixed posthog.init double braces syntax error in generate_html.py that was breaking JS
 ### 2026-06-07 — reverted psummary to use r.summary instead of analogy_plain fallback
+### 2026-06-07 — created alert.py for Gmail SMTP email alerts and validate.py to check releases.db for empty fields, 'Summary unavailable' literals, and dead blog URLs, logging issues to logs.db
