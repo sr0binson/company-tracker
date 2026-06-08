@@ -259,3 +259,4 @@ Fixed 3 bugs in generate_html.py: (1) company tag pill spanning full card width,
 ### 2026-06-07 — created alert.py for Gmail SMTP email alerts and validate.py to check releases.db for empty fields, 'Summary unavailable' literals, and dead blog URLs, logging issues to logs.db
 ### 2026-06-07 — created autofix.py to re-query Haiku and repair empty/unavailable summary and analogy fields in releases.db, mark dead URLs unfixable in logs.db, and send an alert summary on completion
 ### 2026-06-07 — updated WHO_THEY_SERVE with real customer segments, added CUSTOMERS dict with named customers per company, and wired serve pills as clickable dropdowns showing customer links
+### 2026-06-07 — replaced CUSTOMERS dict with verified category-grouped lists, added SHOW_ALL_URLS, updated dropdown generation to loop over categories, fixed click-outside to use capture phase, updated companies.db customer data
