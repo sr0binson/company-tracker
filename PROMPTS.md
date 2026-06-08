@@ -257,3 +257,4 @@ Fixed 3 bugs in generate_html.py: (1) company tag pill spanning full card width,
 ### 2026-06-07 — fixed posthog.init double braces syntax error in generate_html.py that was breaking JS
 ### 2026-06-07 — reverted psummary to use r.summary instead of analogy_plain fallback
 ### 2026-06-07 — created alert.py for Gmail SMTP email alerts and validate.py to check releases.db for empty fields, 'Summary unavailable' literals, and dead blog URLs, logging issues to logs.db
+### 2026-06-07 — created autofix.py to re-query Haiku and repair empty/unavailable summary and analogy fields in releases.db, mark dead URLs unfixable in logs.db, and send an alert summary on completion
