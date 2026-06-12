@@ -154,7 +154,10 @@
         .hiring-summary-header { display: flex; justify-content: space-between; align-items: baseline; }
         .hiring-summary-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: #aaa; }
         .hiring-summary-date { font-size: 0.7rem; color: #ccc; }
-        .hiring-summary-text { font-size: 0.85rem; color: #444; line-height: 1.65; }
+        .hiring-summary-text { font-size: 0.85rem; color: #444; line-height: 1.65; overflow-wrap: break-word; }
+        .hiring-summary-text p { margin: 0 0 8px; }
+        .hiring-summary-text p:last-child { margin-bottom: 0; }
+        .hiring-summary-text strong { color: #222; }
         .reddit-sentiment-text { font-size: 0.73rem; color: #555; line-height: 1.6; }
         .pulse-sources { font-size: 0.63rem; color: #bbb; margin-top: 7px; line-height: 1.7; }
         .pulse-sources a { color: #aaa; text-decoration: none; border-bottom: 1px dotted #ddd; }
@@ -587,15 +590,7 @@
       <span class="hiring-summary-label">Weekly Analysis</span>
       <span class="hiring-summary-date">2026-06-08</span>
     </div>
-    <div class="hiring-summary-text"># Hiring Data Summary
-
-**Linear** shows stable, minimal hiring activity. The company maintained 21 open roles through June 3rd, then dropped to 20 roles on June 4th and held that level for the rest of the week. This suggests either steady-state hiring with occasional closures or a slight pullback in recruitment.
-
-**PostHog** demonstrates no hiring movement whatsoever during the entire week, holding at exactly 16 open roles from June 1st through June 8th. This flat pattern suggests the company is either not actively recruiting, has reached its desired headcount for now, or is experiencing a hiring freeze.
-
-**Replit** shows the most volatile hiring activity of the four companies, fluctuating between 83 and 87 open roles. The company started at 86 roles, dipped to 83 by June 3rd, then climbed back to 87 by June 6th before settling at 86. This volatility could indicate rapidly changing hiring priorities or frequent adjustments to job postings.
-
-**Zapier** displays modest but consistent hiring activity with a net decrease over the week. The company started and ended at 22 open roles but briefly spiked to 24 roles on June 3rd and 4th, suggesting they may have adjusted their hiring strategy mid-week downward. The overall trajectory is a small decline from the</div>
+    <div class="hiring-summary-text"><p style="margin:0;"><strong style="display:block;font-size:0.88rem;color:#222;margin-top:6px;">Hiring Data Summary</strong></p><p style="margin:8px 0 0;"><strong>Linear</strong> shows stable, minimal hiring activity. The company maintained 21 open roles through June 3rd, then dropped to 20 roles on June 4th and held that level for the rest of the week. This suggests either steady-state hiring with occasional closures or a slight pullback in recruitment.</p><p style="margin:8px 0 0;"><strong>PostHog</strong> demonstrates no hiring movement whatsoever during the entire week, holding at exactly 16 open roles from June 1st through June 8th. This flat pattern suggests the company is either not actively recruiting, has reached its desired headcount for now, or is experiencing a hiring freeze.</p><p style="margin:8px 0 0;"><strong>Replit</strong> shows the most volatile hiring activity of the four companies, fluctuating between 83 and 87 open roles. The company started at 86 roles, dipped to 83 by June 3rd, then climbed back to 87 by June 6th before settling at 86. This volatility could indicate rapidly changing hiring priorities or frequent adjustments to job postings.</p><p style="margin:8px 0 0;"><strong>Zapier</strong> displays modest but consistent hiring activity with a net decrease over the week. The company started and ended at 22 open roles but briefly spiked to 24 roles on June 3rd and 4th, suggesting they may have adjusted their hiring strategy mid-week downward. The overall trajectory is a small decline from the</p></div>
   </div>
 </div>
 

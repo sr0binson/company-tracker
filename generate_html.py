@@ -119,6 +119,25 @@ def html_escape(s):
     return (s.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
              .replace('"', '&quot;').replace("'", '&#39;'))
 
+def render_summary_md(text):
+    """Convert AI-generated Markdown in the hiring summary to safe HTML."""
+    if not text:
+        return ''
+    escaped = html_escape(text)
+    # **bold** → <strong>
+    escaped = re.sub(r'\*\*(.+?)\*\*', r'<strong>\1</strong>', escaped)
+    # # / ## / ### header lines → styled block
+    escaped = re.sub(
+        r'^#{1,3}\s+(.+)$',
+        r'<strong style="display:block;font-size:0.88rem;color:#222;margin-top:6px;">\1</strong>',
+        escaped, flags=re.MULTILINE
+    )
+    # Paragraph breaks (2+ newlines)
+    escaped = re.sub(r'\n{2,}', '</p><p style="margin:8px 0 0;">', escaped)
+    # Remaining single newlines
+    escaped = escaped.replace('\n', '<br>')
+    return f'<p style="margin:0;">{escaped}</p>'
+
 def lighten_hex(hex_color, factor=0.45):
     h = hex_color.lstrip('#')
     r, g, b = int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16)
@@ -577,7 +596,10 @@ html = """<!DOCTYPE html>
         .hiring-summary-header { display: flex; justify-content: space-between; align-items: baseline; }
         .hiring-summary-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: #aaa; }
         .hiring-summary-date { font-size: 0.7rem; color: #ccc; }
-        .hiring-summary-text { font-size: 0.85rem; color: #444; line-height: 1.65; }
+        .hiring-summary-text { font-size: 0.85rem; color: #444; line-height: 1.65; overflow-wrap: break-word; }
+        .hiring-summary-text p { margin: 0 0 8px; }
+        .hiring-summary-text p:last-child { margin-bottom: 0; }
+        .hiring-summary-text strong { color: #222; }
         .reddit-sentiment-text { font-size: 0.73rem; color: #555; line-height: 1.6; }
         .pulse-sources { font-size: 0.63rem; color: #bbb; margin-top: 7px; line-height: 1.7; }
         .pulse-sources a { color: #aaa; text-decoration: none; border-bottom: 1px dotted #ddd; }
@@ -950,7 +972,7 @@ if latest_summary:
       <span class="hiring-summary-label">Weekly Analysis</span>
       <span class="hiring-summary-date">{html_escape(summary_date)}</span>
     </div>
-    <div class="hiring-summary-text">{html_escape(summary_text)}</div>
+    <div class="hiring-summary-text">{render_summary_md(summary_text)}</div>
   </div>
 </div>
 """
