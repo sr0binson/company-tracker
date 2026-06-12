@@ -867,7 +867,7 @@ Do not use em dashes."""
             "https://api.anthropic.com/v1/messages",
             data=json.dumps({
                 "model": "claude-haiku-4-5",
-                "max_tokens": 300,
+                "max_tokens": 600,
                 "messages": [{"role": "user", "content": prompt}]
             }).encode(),
             headers={
