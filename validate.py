@@ -88,6 +88,10 @@ def check_dead_urls(rel_con, log_cur):
             if _log_issue(log_cur, "blog_posts", row_id, "dead_url",
                           f"HEAD {url} failed: {e.reason}"):
                 issues += 1
+        except TimeoutError:
+            if _log_issue(log_cur, "blog_posts", row_id, "dead_url",
+                          f"HEAD {url} timed out"):
+                issues += 1
     return issues
 
 
