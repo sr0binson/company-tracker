@@ -50,7 +50,7 @@ FEEDS = {
     "PostHog": "https://posthog.com/rss.xml",
     "Linear": "https://linear.app/rss/changelog.xml",
     "Zapier": "https://zapier.com/blog/feeds/latest/",
-    "Replit": "https://blog.replit.com/feed.xml",
+    "Replit": "https://replit.com/blog/feed.xml",
 }
 
 conn = sqlite3.connect("releases.db")
@@ -693,7 +693,9 @@ if _complaint_rows:
 for company, url in FEEDS.items():
     print(f"Fetching feed for {company}...")
     try:
-        with urllib.request.urlopen(url) as response:
+        req = urllib.request.Request(url)
+        req.add_header("User-Agent", "Mozilla/5.0")
+        with urllib.request.urlopen(req) as response:
             tree = ET.parse(response)
             root = tree.getroot()
 
