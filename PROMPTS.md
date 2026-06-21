@@ -260,3 +260,9 @@ Fixed 3 bugs in generate_html.py: (1) company tag pill spanning full card width,
 ### 2026-06-07 — created autofix.py to re-query Haiku and repair empty/unavailable summary and analogy fields in releases.db, mark dead URLs unfixable in logs.db, and send an alert summary on completion
 ### 2026-06-07 — updated WHO_THEY_SERVE with real customer segments, added CUSTOMERS dict with named customers per company, and wired serve pills as clickable dropdowns showing customer links
 ### 2026-06-07 — replaced CUSTOMERS dict with verified category-grouped lists, added SHOW_ALL_URLS, updated dropdown generation to loop over categories, fixed click-outside to use capture phase, updated companies.db customer data
+### 2026-06-08 — replaced Glitch with Lovable in Replit competitor pills
+### 2026-06-12 — fixed hiring summary card to render AI Markdown as HTML and added overflow-wrap to prevent text clipping
+### 2026-06-18 — Updated footer text to remove '…yet' and add independent opinions disclaimer
+### 2026-06-18 — Added TimeoutError handler in check_dead_urls to log and continue instead of crashing
+### 2026-06-21 — Added User-Agent header to blog feed urlopen call in fetch_feeds.py to match bot-detection fix in validate.py
+### 2026-06-21 — Changed releases_rows query in generate_html.py to select from blog_posts instead of releases
