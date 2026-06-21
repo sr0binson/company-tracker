@@ -37,7 +37,7 @@ except Exception:
 
 try:
     releases_rows = cursor.execute(
-        "SELECT company, summary FROM releases WHERE summary IS NOT NULL AND summary != ''"
+        "SELECT company, summary FROM blog_posts WHERE summary IS NOT NULL AND summary != ''"
     ).fetchall()
 except Exception:
     releases_rows = []
