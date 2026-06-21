@@ -76,7 +76,7 @@ def check_dead_urls(rel_con, log_cur):
     for row_id, url in rows:
         try:
             req = Request(url, method="HEAD")
-            req.add_header("User-Agent", "company-tracker-validator/1.0")
+            req.add_header("User-Agent", "Mozilla/5.0")
             with urlopen(req, timeout=10):
                 pass
         except HTTPError as e:
@@ -95,6 +95,37 @@ def check_dead_urls(rel_con, log_cur):
     return issues
 
 
+def recheck_unfixable_urls(rel_con, log_cur):
+    recovered = 0
+    log_cur.execute(
+        "SELECT row_id FROM errors WHERE error_type='dead_url' AND fixed=-1"
+    )
+    rows = log_cur.fetchall()
+    rel_cur = rel_con.cursor()
+    for (row_id,) in rows:
+        rel_cur.execute(
+            "SELECT link FROM blog_posts WHERE id=?", (row_id,)
+        )
+        row = rel_cur.fetchone()
+        if not row or not row[0]:
+            continue
+        url = row[0]
+        try:
+            req = Request(url, method="HEAD")
+            req.add_header("User-Agent", "Mozilla/5.0")
+            with urlopen(req, timeout=10):
+                pass
+            log_cur.execute(
+                "UPDATE errors SET fixed=1"
+                " WHERE row_id=? AND error_type='dead_url' AND fixed=-1",
+                (row_id,),
+            )
+            recovered += 1
+        except (HTTPError, URLError, TimeoutError):
+            pass
+    return recovered
+
+
 def main():
     if not os.path.exists(RELEASES_DB):
         print(f"{RELEASES_DB} not found", file=sys.stderr)
@@ -108,6 +139,7 @@ def main():
         empty = check_empty_fields(rel_con, log_cur)
         unavailable = check_summary_unavailable(rel_con, log_cur)
         dead = check_dead_urls(rel_con, log_cur)
+        recovered = recheck_unfixable_urls(rel_con, log_cur)
         log_con.commit()
     finally:
         rel_con.close()
@@ -115,7 +147,7 @@ def main():
 
     total = empty + unavailable + dead
     print(f"Validation complete: {empty} empty fields, {unavailable} 'Summary unavailable', "
-          f"{dead} dead URLs — {total} new issue(s) logged.")
+          f"{dead} dead URLs — {total} new issue(s) logged, {recovered} previously-dead URL(s) recovered.")
 
     if total > 0:
         body = (
