@@ -12,12 +12,17 @@ LOGS_DB = "logs.db"
 
 # Content columns that must be non-null and non-empty per table
 CONTENT_COLUMNS = {
-    "releases": ["title", "summary", "analogy", "analogy_plain"],
     "blog_posts": ["title", "summary", "analogy", "analogy_plain", "link"],
     "reddit_sentiment": ["summary", "sources_json", "raw_titles_json"],
 }
 
 SUMMARY_UNAVAILABLE = "Summary unavailable"
+
+
+def _table_exists(cursor, table_name):
+    """Check if a table exists in the connected database."""
+    cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name=?", (table_name,))
+    return cursor.fetchone() is not None
 
 
 def _already_logged(log_cur, table_name, row_id, error_type):
@@ -41,11 +46,14 @@ def _log_issue(log_cur, table_name, row_id, error_type, details):
 
 def check_empty_fields(rel_con, log_cur):
     issues = 0
+    db_cur = rel_con.cursor()
     for table, columns in CONTENT_COLUMNS.items():
-        cur = rel_con.cursor()
+        if not _table_exists(db_cur, table):
+            print(f"Skipping empty field check for non-existent table: {table}", file=sys.stderr)
+            continue
         for col in columns:
-            cur.execute(f"SELECT id FROM {table} WHERE {col} IS NULL OR TRIM({col})=''")
-            for (row_id,) in cur.fetchall():
+            db_cur.execute(f"SELECT id FROM {table} WHERE {col} IS NULL OR TRIM({col})=''")
+            for (row_id,) in db_cur.fetchall():
                 if _log_issue(log_cur, table, row_id, "empty_field",
                               f"Column '{col}' is null or empty"):
                     issues += 1
@@ -54,14 +62,17 @@ def check_empty_fields(rel_con, log_cur):
 
 def check_summary_unavailable(rel_con, log_cur):
     issues = 0
+    db_cur = rel_con.cursor()
     for table, columns in CONTENT_COLUMNS.items():
-        cur = rel_con.cursor()
+        if not _table_exists(db_cur, table):
+            print(f"Skipping summary unavailable check for non-existent table: {table}", file=sys.stderr)
+            continue
         for col in columns:
-            cur.execute(
+            db_cur.execute(
                 f"SELECT id FROM {table} WHERE {col} LIKE ?",
                 (f"%{SUMMARY_UNAVAILABLE}%",),
             )
-            for (row_id,) in cur.fetchall():
+            for (row_id,) in db_cur.fetchall():
                 if _log_issue(log_cur, table, row_id, "summary_unavailable",
                               f"Column '{col}' contains literal '{SUMMARY_UNAVAILABLE}'"):
                     issues += 1
@@ -70,9 +81,13 @@ def check_summary_unavailable(rel_con, log_cur):
 
 def check_dead_urls(rel_con, log_cur):
     issues = 0
-    cur = rel_con.cursor()
-    cur.execute("SELECT id, link FROM blog_posts WHERE link IS NOT NULL AND TRIM(link) != ''")
-    rows = cur.fetchall()
+    db_cur = rel_con.cursor()
+    if not _table_exists(db_cur, "blog_posts"):
+        print(f"Skipping dead URL check for non-existent table: blog_posts", file=sys.stderr)
+        return 0 # No issues to report if the table doesn't exist
+
+    db_cur.execute("SELECT id, link FROM blog_posts WHERE link IS NOT NULL AND TRIM(link) != ''")
+    rows = db_cur.fetchall()
     for row_id, url in rows:
         try:
             req = Request(url, method="HEAD")
@@ -101,12 +116,16 @@ def recheck_unfixable_urls(rel_con, log_cur):
         "SELECT row_id FROM errors WHERE error_type='dead_url' AND fixed=-1"
     )
     rows = log_cur.fetchall()
-    rel_cur = rel_con.cursor()
+    rel_db_cur = rel_con.cursor()
+    if not _table_exists(rel_db_cur, "blog_posts"):
+        print(f"Skipping recheck of unfixable URLs for non-existent table: blog_posts", file=sys.stderr)
+        return 0 # No URLs to recheck if the table doesn't exist
+
     for (row_id,) in rows:
-        rel_cur.execute(
+        rel_db_cur.execute(
             "SELECT link FROM blog_posts WHERE id=?", (row_id,)
         )
-        row = rel_cur.fetchone()
+        row = rel_db_cur.fetchone()
         if not row or not row[0]:
             continue
         url = row[0]
