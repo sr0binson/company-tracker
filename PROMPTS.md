@@ -266,3 +266,5 @@ Fixed 3 bugs in generate_html.py: (1) company tag pill spanning full card width,
 ### 2026-06-18 — Added TimeoutError handler in check_dead_urls to log and continue instead of crashing
 ### 2026-06-21 — Added User-Agent header to blog feed urlopen call in fetch_feeds.py to match bot-detection fix in validate.py
 ### 2026-06-21 — Changed releases_rows query in generate_html.py to select from blog_posts instead of releases
+### 2026-06-23 — Removed PostHog analytics script block from generate_html.py
+### 2026-06-23 — Added favicon link tag to HTML head in generate_html.py
